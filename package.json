@@ -1,0 +1,36 @@
+{
+  "name": "chrobject",
+  "description": "Stores chronicles of plain objects as diffs and snapshots",
+  "keywords": [
+    "objects",
+    "chronicle",
+    "backend",
+    "timeline"
+  ],
+  "author": "Christian Hotz <hotz@hydra-newmedia.com> ",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hydra-newmedia/chrobject.git"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/hydra-newmedia/chrobject/blob/master/LICENSE-MIT"
+    }
+  ],
+  "main": "lib/index",
+  "typings": "lib/index",
+  "files": [
+    "lib/"
+  ],
+  "scripts": {
+    "pretest": "tsc && rm -rf testDist/ && node_modules/typescript/bin/tsc --rootDir test --outDir testDist test/**/*.ts typings/index.d.ts",
+    "test": "node_modules/mocha/bin/mocha testDist/* -R nyan --recursive"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^1.8.10",
+    "typings": "^1.0.4"
+  }
+}
