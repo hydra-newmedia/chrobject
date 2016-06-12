@@ -9,6 +9,7 @@
 /**
  *  Imports
  */
+import * as _ from 'lodash';
 import { Entity, Snapshot, Diff, Creator } from '../utils';
 import { StorageStrategy } from '../storage/StorageStrategy';
 
@@ -48,6 +49,6 @@ export class EntryAppService {
     private diff(snapOne: Snapshot, snapTwo: Snapshot): Diff {
         // TODO: check order (timebased), check if same entity
         // TODO: object diff between snapOne.obj and snapTwo.obj
-        return new Diff({}, snappTwo.entity, snapTwo.creator, snapTwo.timestamp);
+        return new Diff({}, snapTwo.entity, snapTwo.creator, snapTwo.timestamp);
     }
 }
