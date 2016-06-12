@@ -30,7 +30,7 @@ export class HistoryController {
         }
         switch (this.config) {
             case Configuration.SNAP_AND_DIFF:
-                return this.appService.saveSnapshotAndDiff(obj, creator, t);
+                return this.appService.saveSnapshotAndDiff(obj, creator, timestamp);
             case Configuration.SNAP_ONLY:
                 return { snapshot: this.appService.saveSnapshot(obj, creator, timestamp) };
             case Configuration.DIFF_ONLY:
