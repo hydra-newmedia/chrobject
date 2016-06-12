@@ -14,4 +14,8 @@ export class Entity {
         this.name = name;
         this.idPath = idPath;
     }
+
+    equals(other: Entity): boolean {
+        return this.name === other.name && this.idPath === other.idPath;
+    }
 }

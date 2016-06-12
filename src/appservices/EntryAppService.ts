@@ -10,6 +10,7 @@
  *  Imports
  */
 import * as _ from 'lodash';
+import { diff } from 'deep-diff';
 import { Entity, Snapshot, Diff, Creator } from '../utils';
 import { StorageStrategy } from '../storage/StorageStrategy';
 
@@ -47,8 +48,94 @@ export class EntryAppService {
     }
 
     private diff(snapOne: Snapshot, snapTwo: Snapshot): Diff {
-        // TODO: check order (timebased), check if same entity
-        // TODO: object diff between snapOne.obj and snapTwo.obj
-        return new Diff({}, snapTwo.entity, snapTwo.creator, snapTwo.timestamp);
+        // Check if snapshots are of same entity
+        if (!snapOne.entity.equals(snapTwo.entity)) {
+            throw new Error('Diffed snapshots are not of same entity');
+        }
+        // swap snapshots if snapTwo was taken before snapOne
+        if (snapOne.timestamp > snapTwo.timestamp) {
+            let tmp = snapOne;
+            snapOne = snapTwo;
+            snapTwo = tmp;
+        }
+
+        // diff between the two snapshots
+        let diffObj: FormatedDeepDiff[] = this.formatDeepDiffObj(diff(snapOne.obj, snapTwo.obj));
+
+        return new Diff(diffObj, snapTwo.entity, snapTwo.creator, snapTwo.timestamp);
     }
+
+    private formatDeepDiffObj(diff: DeepDiff[]): FormatedDeepDiff[] {
+        return _.map<DeepDiff, FormatedDeepDiff>(diff,
+            (value: DeepDiff, index: number, collection: FormatedDeepDiff[]): FormatedDeepDiff => {
+                let path = value.path.join('.');
+                switch (_.get(value, 'kind')) {
+                    case 'N':
+                        collection[index] = {
+                            action: 'created',
+                            created: true,
+                            propertyPath: path,
+                            newValue: value.rhs
+                        };
+                        break;
+                    case 'E':
+                        collection[index] = {
+                            action: 'edited',
+                            edited: true,
+                            propertyPath: path,
+                            oldValue: value.lhs,
+                            newValue: value.rhs
+                        };
+                        break;
+                    case 'D':
+                        collection[index] = {
+                            action: 'deleted',
+                            deleted: true,
+                            propertyPath: path,
+                            newValue: value.rhs
+                        };
+                        break;
+                    case 'A':
+                        switch (value.item.kind) {
+                            case 'N':
+                                collection[index] = {
+                                    action: 'added',
+                                    edited: true,
+                                    propertyPath: path,
+                                    newValue: value.rhs
+                                };
+                                break;
+                            case 'D':
+                                collection[index] = {
+                                    action: 'removed',
+                                    edited: true,
+                                    propertyPath: path,
+                                    oldValue: value.lhs
+                                };
+                                break;
+                        }
+                        break;
+                }
+                return collection[index];
+            });
+    }
+}
+
+interface DeepDiff {
+    kind: string;
+    path: Array<string>;
+    lhs?: any;
+    rhs?: any;
+    index?: number;
+    item?: DeepDiff;
+}
+
+interface FormatedDeepDiff {
+    action: string;
+    created?: boolean;
+    edited?: boolean;
+    deleted?: boolean;
+    propertyPath: string;
+    oldValue?: any;
+    newValue?: any;
 }
