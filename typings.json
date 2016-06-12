@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160416211519",
+    "mongoose": "registry:npm/mongoose#4.3.5+20160610145311"
+  }
+}

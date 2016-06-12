@@ -28,9 +28,13 @@
     "pretest": "tsc && rm -rf testDist/ && node_modules/typescript/bin/tsc --rootDir test --outDir testDist test/**/*.ts typings/index.d.ts",
     "test": "node_modules/mocha/bin/mocha testDist/* -R nyan --recursive"
   },
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "^4.13.1",
+    "mongoose": "^4.4.20",
+    "mongoose-repo": "^0.1.2"
+  },
   "devDependencies": {
     "typescript": "^1.8.10",
-    "typings": "^1.0.4"
+    "typings": "^1.0.5"
   }
 }
