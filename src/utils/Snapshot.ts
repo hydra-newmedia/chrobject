@@ -9,7 +9,7 @@
 /**
  *  Imports
  */
-import { Entry } from './index';
+import { Entry } from './Entry';
 
 export class Snapshot extends Entry {
 }

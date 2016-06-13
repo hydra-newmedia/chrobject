@@ -11,7 +11,10 @@
  */
 import * as _ from 'lodash';
 import { diff } from 'deep-diff';
-import { Entity, Snapshot, Diff, Creator } from '../utils';
+import { Entity } from '../utils/Entity';
+import { Snapshot } from '../utils/Snapshot';
+import { Diff } from '../utils/Diff';
+import { Creator } from '../utils/Creator';
 import { StorageStrategy } from '../storage/StorageStrategy';
 
 export class EntryAppService {
@@ -123,7 +126,7 @@ interface DeepDiff {
 }
 
 interface FormatedDeepDiff {
-    action: string;
+    action: DiffAction;
     created?: boolean;
     edited?: boolean;
     deleted?: boolean;
@@ -131,3 +134,5 @@ interface FormatedDeepDiff {
     oldValue?: any;
     newValue?: any;
 }
+
+type DiffAction = 'created' | 'edited' | 'deleted' | 'added' | 'removed';

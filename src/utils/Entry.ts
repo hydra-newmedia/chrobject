@@ -10,17 +10,18 @@
  *  Imports
  */
 import * as _ from 'lodash';
-import { Entity, Creator } from './index';
+import { Entity } from './Entity';
+import { Creator } from './Creator';
 
 export class Entry {
     id: string;
     entity: Entity;
     creator: Creator;
-    obj: Object;
+    obj: Object | Object[];
     objId: string;
     timestamp: Date;
 
-    constructor(obj: Object, entity: Entity, creator: Creator, timestamp: Date, id?: string) {
+    constructor(obj: Object | Object[], entity: Entity, creator: Creator, timestamp: Date, id?: string) {
         this.entity = entity;
         this.creator = creator;
         this.obj = obj;

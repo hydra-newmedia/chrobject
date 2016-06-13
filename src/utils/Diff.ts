@@ -9,7 +9,9 @@
 /**
  *  Imports
  */
-import { Entry, Entity, Creator } from './index';
+import { Entry } from './Entry';
+import { Entity } from './Entity';
+import { Creator } from  './Creator';
 
 export class Diff extends Entry {
     linkId: string;

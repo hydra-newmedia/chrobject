@@ -14,7 +14,6 @@ import { Repository } from 'mongoose-repo';
 import { StorageStrategy } from '../StorageStrategy';
 import { Snapshot, Diff, Entity } from '../../utils';
 import { DiffDocument, DiffCollection } from './models/DiffModel';
-import { EntryModel, EntryDocument } from './models/EntryModel';
 import { SnapshotDocument, SnapshotCollection } from './models/SnapshotModel';
 import { Creator } from '../../../lib/utils/Creator';
 
@@ -31,8 +30,8 @@ export class MongooseStorage implements StorageStrategy {
     upsertSnapshot(snapshot: Snapshot): Snapshot {
         let updateCondition = {};
         _.set(updateCondition, snapshot.entity.idPath, snapshot.objId);
-        this.snapshotRepository.updateByCondition(updateCondition, new EntryModel(snapshot),
-            (err: any, model?: EntryDocument) => {
+        this.snapshotRepository.updateByCondition(updateCondition, new SnapshotModel(snapshot),
+            (err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
                     throw err;
                 } else {
@@ -46,8 +45,8 @@ export class MongooseStorage implements StorageStrategy {
     upsertDiff(diff: Diff): Diff {
         let updateCondition = {};
         _.set(updateCondition, diff.entity.idPath, diff.objId);
-        this.diffRepository.updateByCondition(updateCondition, new EntryModel(diff),
-            (err: any, model?: EntryDocument) => {
+        this.diffRepository.updateByCondition(updateCondition, new DiffModel(diff),
+            (err: any, model?: DiffDocument) => {
                 if (err || !model) {
                     throw err;
                 } else {

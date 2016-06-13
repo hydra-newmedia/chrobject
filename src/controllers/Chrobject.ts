@@ -9,14 +9,18 @@
 /**
  *  Imports
  */
-import { Entity, Configuration, Creator, Diff, Snapshot } from '../utils';
+import { Entity } from '../utils/Entity';
+import { Diff } from '../utils/Diff';
+import { Snapshot } from '../utils/Snapshot';
+import { Configuration } from '../utils/Configuration';
+import { Creator } from '../utils/Creator';
 import { EntryAppService } from '../appservices/EntryAppService';
 
 export class Chrobject {
 
-    private entity: Entity;
-    private config: Configuration;
-    private appService: EntryAppService;
+    entity: Entity;
+    config: Configuration;
+    appService: EntryAppService;
 
     constructor(entity: Entity, config: Configuration) {
         this.entity = entity;

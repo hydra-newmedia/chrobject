@@ -9,7 +9,9 @@
 /**
  *  Imports
  */
-import { Entity, Snapshot, Diff } from '../utils';
+import { Entity } from '../utils/Entity';
+import { Snapshot } from '../utils/Snapshot';
+import { Diff } from '../utils/Diff';
 
 export interface StorageStrategy {
     upsertSnapshot(snapshot: Snapshot): Snapshot;
