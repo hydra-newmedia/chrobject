@@ -9,4 +9,4 @@
 /**
  *  Imports
  */
-export * from './controllers/HistoryController';
+export * from './controllers/Chrobject';

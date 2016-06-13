@@ -12,7 +12,7 @@
 import { Entity, Configuration, Creator, Diff, Snapshot } from '../utils';
 import { EntryAppService } from '../appservices/EntryAppService';
 
-export class HistoryController {
+export class Chrobject {
 
     private entity: Entity;
     private config: Configuration;
