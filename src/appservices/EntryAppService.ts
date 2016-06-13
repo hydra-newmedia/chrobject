@@ -21,8 +21,9 @@ export class EntryAppService {
     entity: Entity;
     storage: StorageStrategy;
 
-    constructor(entity: Entity) {
+    constructor(entity: Entity, storage: StorageStrategy) {
         this.entity = entity;
+        this.storage = storage;
     }
 
     saveSnapshotAndDiff(obj: Object, creator: Creator, timestamp: Date): { snapshot: Snapshot, diff: Diff } {

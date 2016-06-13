@@ -15,6 +15,7 @@ import { Snapshot } from '../utils/Snapshot';
 import { Configuration } from '../utils/Configuration';
 import { Creator } from '../utils/Creator';
 import { EntryAppService } from '../appservices/EntryAppService';
+import { StorageStrategy } from '../storage/StorageStrategy';
 
 export class Chrobject {
 
@@ -22,10 +23,10 @@ export class Chrobject {
     config: Configuration;
     appService: EntryAppService;
 
-    constructor(entity: Entity, config: Configuration) {
+    constructor(entity: Entity, config: Configuration, storage: StorageStrategy) {
         this.entity = entity;
         this.config = config;
-        this.appService = new EntryAppService(entity);
+        this.appService = new EntryAppService(entity, storage);
     }
 
     saveEntry(obj: Object, creator: Creator, timestamp?: Date): { snapshot?: Snapshot, diff?: Diff } {
