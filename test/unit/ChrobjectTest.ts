@@ -167,8 +167,8 @@ describe('The Chrobject\'s', () => {
             expect(saveDiffOnly.calledOnce).to.be.ok();
             expect(saveDiffOnly.getCall(0).args[0]).to.eql(testObj);
             expect(saveDiffOnly.getCall(0).args[1]).to.eql(creator);
-            // expect date to be approximately 'now' (± 1000ms)
-            expect(Math.abs(saveDiffOnly.getCall(0).args[2].valueOf() - (new Date()).valueOf())).to.be.lessThan(1000);
+            // expect date to be approximately 'now' (± 10,000 ms)
+            expect(Math.abs(saveDiffOnly.getCall(0).args[2].valueOf() - (new Date()).valueOf())).to.be.lessThan(10000);
             expect(saveSnapAndDiff.called).not.to.be.ok();
             expect(saveSnapOnly.called).not.to.be.ok();
         });
