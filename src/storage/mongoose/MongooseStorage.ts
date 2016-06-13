@@ -14,7 +14,11 @@ import { Repository } from 'mongoose-repo';
 import { StorageStrategy } from '../StorageStrategy';
 import { Snapshot, Diff, Entity } from '../../utils';
 import { DiffDocument, DiffCollection } from './models/DiffModel';
-import { SnapshotDocument, SnapshotCollection } from './models/SnapshotModel';
+import {
+    SnapshotDocument,
+    SnapshotCollection,
+    SnapshotModel
+} from './models/SnapshotModel';
 import { Creator } from '../../../lib/utils/Creator';
 
 export class MongooseStorage implements StorageStrategy {
@@ -27,31 +31,35 @@ export class MongooseStorage implements StorageStrategy {
         this.diffRepository = new Repository<DiffDocument>(DiffCollection);
     }
 
+    insertSnapshot(snapshot: Snapshot): Snapshot {
+        this.snapshotRepository.insert(new SnapshotModel(snapshot), (err: any, model?: SnapshotDocument) => {
+            if (err || !model) {
+                throw err;
+            } else {
+                return snapshot.clone().setId(model._id.toString());
+            }
+        });
+    }
+
     upsertSnapshot(snapshot: Snapshot): Snapshot {
-        let updateCondition = {};
-        _.set(updateCondition, snapshot.entity.idPath, snapshot.objId);
+        let updateCondition = { 'metadata.objId': snapshot.objId };
         this.snapshotRepository.updateByCondition(updateCondition, new SnapshotModel(snapshot),
             (err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
                     throw err;
                 } else {
-                    snapshot.setId(model._id.toString());
-                    return snapshot;
+                    return snapshot.clone().setId(model._id.toString());
                 }
             }
         );
     }
 
-    upsertDiff(diff: Diff): Diff {
-        let updateCondition = {};
-        _.set(updateCondition, diff.entity.idPath, diff.objId);
-        this.diffRepository.updateByCondition(updateCondition, new DiffModel(diff),
-            (err: any, model?: DiffDocument) => {
+    insertDiff(diff: Diff): Diff {
+        this.diffRepository.insert(new DiffModel(diff), (err: any, model?: DiffDocument) => {
                 if (err || !model) {
                     throw err;
                 } else {
-                    diff.setId(model._id.toString());
-                    return diff;
+                    return diff.clone().setId(model._id.toString());
                 }
             }
         );

@@ -30,15 +30,16 @@ export class EntryAppService {
         let id: string = _.get<string>(obj, this.entity.idPath);
         let oldSnap: Snapshot = this.storage.findLatestSnapshotBefore(id, timestamp, this.entity);
         let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp);
-        newSnap = this.storage.upsertSnapshot(newSnap);
+        newSnap = this.storage.insertSnapshot(newSnap);
         let diff: Diff = this.diff(oldSnap, newSnap);
-        diff = this.storage.upsertDiff(diff);
+        diff.linkToId(newSnap.id);
+        diff = this.storage.insertDiff(diff);
         return { snapshot: newSnap, diff: diff };
     }
 
     saveSnapshot(obj: Object, creator: Creator, timestamp: Date): Snapshot {
         let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp);
-        return this.storage.upsertSnapshot(newSnap);
+        return this.storage.insertSnapshot(newSnap);
     }
 
     saveDiff(obj: Object, creator: Creator, timestamp: Date): Diff {
@@ -47,8 +48,7 @@ export class EntryAppService {
         let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp, oldSnap.id);
         newSnap = this.storage.upsertSnapshot(newSnap);
         let diff: Diff = this.diff(oldSnap, newSnap);
-        diff.linkToId(newSnap.id);
-        return this.storage.upsertDiff(diff);
+        return this.storage.insertDiff(diff);
     }
 
     private diff(snapOne: Snapshot, snapTwo: Snapshot): Diff {

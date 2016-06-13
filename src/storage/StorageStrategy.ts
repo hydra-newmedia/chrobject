@@ -14,8 +14,9 @@ import { Snapshot } from '../utils/Snapshot';
 import { Diff } from '../utils/Diff';
 
 export interface StorageStrategy {
+    insertSnapshot(snapshot: Snapshot): Snapshot;
     upsertSnapshot(snapshot: Snapshot): Snapshot;
-    upsertDiff(diff: Diff): Diff;
+    insertDiff(diff: Diff): Diff;
     findLatestSnapshotBefore(id: string, timestamp: Date, entity: Entity): Snapshot;
     findLatestDiffBefore(id: string, timestamp: Date, entity: Entity): Diff;
 }

@@ -9,11 +9,10 @@
 /**
  *  Imports
  */
-import * as _ from 'lodash';
 import { Entity } from './Entity';
 import { Creator } from './Creator';
 
-export class Entry {
+export interface Entry {
     id: string;
     entity: Entity;
     creator: Creator;
@@ -21,18 +20,7 @@ export class Entry {
     objId: string;
     timestamp: Date;
 
-    constructor(obj: Object | Object[], entity: Entity, creator: Creator, timestamp: Date, id?: string) {
-        this.entity = entity;
-        this.creator = creator;
-        this.obj = obj;
-        this.objId = _.get<string>(obj, this.entity.idPath);
-        this.timestamp = timestamp;
-        if (id) {
-            this.id = id;
-        }
-    }
+    setId(id: string): Entry;
 
-    setId(id: string): void {
-        this.id = id;
-    }
+    clone(): Entry;
 }

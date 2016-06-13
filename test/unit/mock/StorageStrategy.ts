@@ -12,7 +12,7 @@
 import * as chrobject from '../../../lib';
 
 export class StorageStrategy implements chrobject.StorageStrategy {
-    private testSnapObj: Object = {
+    testSnapObj: Object = {
         my: {
             identificator: 'abcdef'
         },
@@ -22,7 +22,7 @@ export class StorageStrategy implements chrobject.StorageStrategy {
         },
         arr: ['a', 'b', 'd']
     };
-    private testDiffObj: Object[] = [
+    testDiffObj: Object[] = [
         {
             action: 'created',
             created: true,
@@ -55,20 +55,22 @@ export class StorageStrategy implements chrobject.StorageStrategy {
             oldValue: 'd'
         }
     ];
-    private creator: chrobject.Creator = new chrobject.Creator('username', 'sourceapp');
+    creator: chrobject.Creator = new chrobject.Creator('username', 'sourceapp');
 
-    private oneMinuteBefore(timestamp: Date): Date {
+    oneMinuteBefore(timestamp: Date): Date {
         return new Date(timestamp.valueOf() - 60000);
+    }
+    
+    insertSnapshot(snapshot: chrobject.Snapshot): chrobject.Snapshot {
+        return snapshot.clone().setId('0011223344');
     }
 
     upsertSnapshot(snapshot: chrobject.Snapshot): chrobject.Snapshot {
-        snapshot.setId('0123456789');
-        return snapshot;
+        return snapshot.clone().setId('0123456789');
     }
 
-    upsertDiff(diff: chrobject.Diff): chrobject.Diff {
-        diff.setId('1234567890');
-        return diff;
+    insertDiff(diff: chrobject.Diff): chrobject.Diff {
+        return diff.clone().setId('1234567890');
     }
 
     findLatestSnapshotBefore(id: string, timestamp: Date, entity: chrobject.Entity): chrobject.Snapshot {
