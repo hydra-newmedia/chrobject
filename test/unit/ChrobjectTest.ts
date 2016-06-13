@@ -10,6 +10,7 @@
  *  Imports
  */
 import {
+    StorageStrategy as LibStorageStrategy,
     Chrobject,
     Entity,
     Configuration,
@@ -19,6 +20,7 @@ import {
 } from '../../lib';
 import { EntryAppService } from '../../lib/appservices/EntryAppService';
 import * as sinon from 'sinon';
+import { StorageStrategy } from './mock/StorageStrategy';
 
 let expect = require('expect.js');
 
@@ -26,17 +28,18 @@ describe('The Chrobject\'s', () => {
 
     let chrobject: Chrobject;
     let entity = new Entity('testObj', 'my.identificator');
+    let storage: LibStorageStrategy = new StorageStrategy();
 
     describe('constructor', () => {
         it('should set members by parameters', () => {
             let config = Configuration.SNAP_AND_DIFF;
-            chrobject = new Chrobject(entity, config);
+            chrobject = new Chrobject(entity, config, storage);
             expect(chrobject).to.be.ok();
             expect(chrobject.entity).to.be.ok();
             expect(chrobject.entity).to.eql(entity);
             expect(chrobject.config).to.eql(config);
             expect(chrobject.appService).to.be.ok();
-            expect(chrobject.appService).to.eql(new EntryAppService(entity));
+            expect(chrobject.appService).to.eql(new EntryAppService(entity, storage));
         });
     });
 
@@ -52,40 +55,7 @@ describe('The Chrobject\'s', () => {
                     no: 'nope'
                 },
                 arr: ['a', 'b', 'd']
-            },
-            testDiffObjArr: Object[] = [
-                {
-                    action: 'created',
-                    created: true,
-                    propertyPath: 'data.b',
-                    newValue: 'createdValue'
-                },
-                {
-                    action: 'edited',
-                    edited: true,
-                    propertyPath: 'data.a',
-                    oldValue: 'aValue',
-                    newValue: 'aEditedValue'
-                },
-                {
-                    action: 'deleted',
-                    deleted: true,
-                    propertyPath: 'data.no',
-                    oldValue: 'nope',
-                },
-                {
-                    action: 'added',
-                    edited: true,
-                    propertyPath: 'arr',
-                    newValue: 'c'
-                },
-                {
-                    action: 'removed',
-                    edited: true,
-                    propertyPath: 'arr',
-                    oldValue: 'd'
-                }
-            ];
+            };
         let saveSnapAndDiff: sinon.SinonStub, saveSnapOnly: sinon.SinonStub, saveDiffOnly: sinon.SinonStub;
         before('mock appservice', () => {
             let entity = new Entity('testObj', 'my.identificator');
