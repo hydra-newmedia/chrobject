@@ -65,58 +65,50 @@ export class EntryAppService {
         return new Diff(diffObj, snapTwo.entity, snapTwo.creator, snapTwo.timestamp);
     }
 
-    private formatDeepDiffObj(diff: DeepDiff[]): FormatedDeepDiff[] {
-        return _.map<DeepDiff, FormatedDeepDiff>(diff,
-            (value: DeepDiff, index: number, collection: FormatedDeepDiff[]): FormatedDeepDiff => {
+    private formatDeepDiffObj(deepDiff: DeepDiff[]): FormatedDeepDiff[] {
+        return _.map<DeepDiff, FormatedDeepDiff>(deepDiff, (value: DeepDiff): FormatedDeepDiff => {
                 let path = value.path.join('.');
                 switch (_.get(value, 'kind')) {
                     case 'N':
-                        collection[index] = {
+                        return {
                             action: 'created',
                             created: true,
                             propertyPath: path,
                             newValue: value.rhs
                         };
-                        break;
                     case 'E':
-                        collection[index] = {
+                         return {
                             action: 'edited',
                             edited: true,
                             propertyPath: path,
                             oldValue: value.lhs,
                             newValue: value.rhs
                         };
-                        break;
                     case 'D':
-                        collection[index] = {
+                        return {
                             action: 'deleted',
                             deleted: true,
                             propertyPath: path,
                             newValue: value.rhs
                         };
-                        break;
                     case 'A':
                         switch (value.item.kind) {
                             case 'N':
-                                collection[index] = {
+                                return {
                                     action: 'added',
                                     edited: true,
                                     propertyPath: path,
                                     newValue: value.rhs
                                 };
-                                break;
                             case 'D':
-                                collection[index] = {
+                                return {
                                     action: 'removed',
                                     edited: true,
                                     propertyPath: path,
                                     oldValue: value.lhs
                                 };
-                                break;
                         }
-                        break;
                 }
-                return collection[index];
             });
     }
 }
