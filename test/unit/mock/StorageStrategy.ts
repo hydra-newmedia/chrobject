@@ -66,7 +66,7 @@ export class StorageStrategy implements chrobject.StorageStrategy {
     }
 
     upsertSnapshot(snapshot: chrobject.Snapshot): chrobject.Snapshot {
-        return snapshot.clone().setId('0123456789');
+        return snapshot.clone().setId(snapshot.id ? snapshot.id : '0123456789');
     }
 
     insertDiff(diff: chrobject.Diff): chrobject.Diff {
