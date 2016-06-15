@@ -9,6 +9,7 @@
 /**
  *  Imports
  */
+import * as _ from 'lodash';
 import {
     StorageStrategy as LibStorageStrategy,
     Chrobject,
@@ -21,6 +22,8 @@ import {
 import { EntryAppService } from '../../lib/appservices/EntryAppService';
 import * as sinon from 'sinon';
 import { StorageStrategy } from './mock/StorageStrategy';
+import { IDeepDiff } from '../../lib/utils/IDeepDiff';
+import { DeepDiff } from '../../lib/utils/DeepDiff';
 
 let expect = require('expect.js');
 
@@ -55,7 +58,10 @@ describe('The Chrobject\'s', () => {
                     no: 'nope'
                 },
                 arr: ['a', 'b', 'd']
-            };
+            },
+            testDiff: IDeepDiff[] = [
+                new DeepDiff('created', 'data.test', null, 'testValue')
+            ];
         let saveSnapAndDiff: sinon.SinonStub, saveSnapOnly: sinon.SinonStub, saveDiffOnly: sinon.SinonStub;
         before('mock appservice', () => {
             let entity = new Entity('testObj', 'my.identificator');
@@ -63,7 +69,7 @@ describe('The Chrobject\'s', () => {
                 (obj: Object, creator: Creator, timestamp: Date): { snapshot: Snapshot, diff: Diff } => {
                     return {
                         snapshot: new Snapshot(obj, entity, creator, timestamp, '0123456789'),
-                        diff: new Diff(obj, entity, creator, timestamp, '1234567890', '0123456789')
+                        diff: new Diff(testDiff, _.get<string>(obj, entity.idPath), entity, creator, timestamp, '1234567890', '0123456789')
                     };
                 }
             );
@@ -74,7 +80,7 @@ describe('The Chrobject\'s', () => {
             );
             saveDiffOnly = sinon.stub(chrobject.appService, 'saveDiff',
                 (obj: Object, creator: Creator, timestamp: Date): Diff => {
-                    return new Diff(obj, entity, creator, timestamp, '1234567890');
+                    return new Diff(testDiff, _.get<string>(obj, entity.idPath), entity, creator, timestamp, '1234567890');
                 }
             );
         });
@@ -103,7 +109,9 @@ describe('The Chrobject\'s', () => {
             expect(savedEntry.snapshot instanceof Snapshot).to.be.ok();
             expect(savedEntry.snapshot).to.eql(new Snapshot(testObj, entity, creator, timestamp, '0123456789'));
             expect(savedEntry.diff instanceof Diff).to.be.ok();
-            expect(savedEntry.diff).to.eql(new Diff(testObj, entity, creator, timestamp, '1234567890', '0123456789'));
+            expect(savedEntry.diff).to.eql(
+                new Diff(testDiff, _.get<string>(testObj, entity.idPath), entity, creator, timestamp, '1234567890', '0123456789')
+            );
         });
         it('should use correct method saveDiff of appservice when configured', () => {
             chrobject.config = Configuration.DIFF_ONLY;
@@ -115,7 +123,9 @@ describe('The Chrobject\'s', () => {
             expect(saveSnapAndDiff.called).not.to.be.ok();
             expect(saveSnapOnly.called).not.to.be.ok();
             expect(savedEntry.diff instanceof Diff).to.be.ok();
-            expect(savedEntry.diff).to.eql(new Diff(testObj, entity, creator, timestamp, '1234567890'));
+            expect(savedEntry.diff).to.eql(
+                new Diff(testDiff, _.get<string>(testObj, entity.idPath), entity, creator, timestamp, '1234567890')
+            );
             expect(savedEntry.snapshot).not.to.be.ok();
         });
         it('should use correct method saveSnapshot of appservice when configured', () => {

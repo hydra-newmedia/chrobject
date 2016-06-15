@@ -9,7 +9,10 @@
 /**
  *  Imports
  */
+import * as _ from 'lodash';
 import * as chrobject from '../../../lib';
+import { IDeepDiff } from '../../../lib';
+import { DeepDiff } from '../../../lib/utils/DeepDiff';
 
 export class StorageStrategy implements chrobject.StorageStrategy {
     testSnapObj: Object = {
@@ -20,47 +23,38 @@ export class StorageStrategy implements chrobject.StorageStrategy {
             a: 'aValue',
             no: 'nope'
         },
-        arr: ['a', 'b', 'd']
+        arr: ['a', 'few', 'elements'],
+        delArr: ['a', 'b', 'c'],
+        flipchartArr: ['a', 'b', 'c', 'd', 'e']
     };
-    testDiffObj: Object[] = [
-        {
-            action: 'created',
-            created: true,
-            propertyPath: 'data.b',
-            newValue: 'createdValue'
+    testSnapObj2: Object = {
+        my: {
+            identificator: 'abcdef'
         },
-        {
-            action: 'edited',
-            edited: true,
-            propertyPath: 'data.a',
-            oldValue: 'aValue',
-            newValue: 'aEditedValue'
+        addedKey: { added: 'lö' },
+        data: {
+            a: 'aEditedValue',
+            b: 'createdValue'
         },
-        {
-            action: 'deleted',
-            deleted: true,
-            propertyPath: 'data.no',
-            oldValue: 'nope',
-        },
-        {
-            action: 'added',
-            edited: true,
-            propertyPath: 'arr',
-            newValue: 'c'
-        },
-        {
-            action: 'removed',
-            edited: true,
-            propertyPath: 'arr',
-            oldValue: 'd'
-        }
+        arr: ['a', 'few', 'more', 'elements', { than: 'before' }],
+        delArr: ['a', 'c'],
+        flipchartArr: ['a', 'c', 'f', 'e', 'x']
+    };
+    testDiffObj: IDeepDiff[] = [
+        new DeepDiff('edited', 'data.a', 'aValue', 'aEditedValue'),
+        new DeepDiff('deleted', 'data.no', 'nope', null),
+        new DeepDiff('created', 'data.b', 'data.b', 'createdValue'),
+        new DeepDiff('array', 'arr', ['a', 'few', 'elements'], ['a', 'few', 'more', 'elements', { than: 'before' }]),
+        new DeepDiff('array', 'delArr', ['a', 'b', 'c'], ['a', 'c']),
+        new DeepDiff('array', 'flipchartArr', ['a', 'b', 'c', 'd', 'e'], ['a', 'c', 'f', 'e', 'x']),
+        new DeepDiff('created', 'addedKey', null, { added: 'lö' })
     ];
     creator: chrobject.Creator = new chrobject.Creator('username', 'sourceapp');
 
     oneMinuteBefore(timestamp: Date): Date {
         return new Date(timestamp.valueOf() - 60000);
     }
-    
+
     insertSnapshot(snapshot: chrobject.Snapshot): chrobject.Snapshot {
         return snapshot.clone().setId('0011223344');
     }
@@ -78,6 +72,6 @@ export class StorageStrategy implements chrobject.StorageStrategy {
     }
 
     findLatestDiffBefore(id: string, timestamp: Date, entity: chrobject.Entity): chrobject.Diff {
-        return new chrobject.Diff(this.testDiffObj, entity, this.creator, this.oneMinuteBefore(timestamp), '0200000000');
+        return new chrobject.Diff(this.testDiffObj, _.get<string>(this.testDiffObj, entity.idPath), entity, this.creator, this.oneMinuteBefore(timestamp), '0200000000');
     }
 }

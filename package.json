@@ -29,7 +29,6 @@
     "test": "node_modules/mocha/bin/mocha testDist/* -R nyan --recursive"
   },
   "dependencies": {
-    "deep-diff": "^0.3.4",
     "lodash": "^4.13.1",
     "mongoose": "^4.4.20",
     "mongoose-repo": "^0.1.2"
@@ -39,6 +38,6 @@
     "mocha": "^2.5.3",
     "sinon": "^1.17.4",
     "typescript": "^1.8.10",
-    "typings": "^1.0.5"
+    "typings": "^1.1.0"
   }
 }

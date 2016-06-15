@@ -9,25 +9,25 @@
 /**
  *  Imports
  */
-import * as _ from 'lodash';
 import { Entry } from './Entry';
 import { Entity } from './Entity';
-import { Creator } from  './Creator';
+import { Creator } from './Creator';
+import { IDeepDiff } from './IDeepDiff';
 
 export class Diff implements Entry {
     id: string;
     entity: Entity;
     creator: Creator;
-    obj: Object | Object[];
+    obj: IDeepDiff[];
     objId: string;
     timestamp: Date;
     linkId: string;
 
-    constructor(obj: Object, entity: Entity, creator: Creator, timestamp: Date, id?: string, linkId?: string) {
+    constructor(diff: IDeepDiff[], objId: string, entity: Entity, creator: Creator, timestamp: Date, id?: string, linkId?: string) {
         this.entity = entity;
         this.creator = creator;
-        this.obj = obj;
-        this.objId = _.get<string>(obj, this.entity.idPath);
+        this.obj = diff;
+        this.objId = objId;
         this.timestamp = timestamp;
         if (id) {
             this.id = id;
@@ -48,6 +48,7 @@ export class Diff implements Entry {
     }
 
     clone(): Diff {
-        return new Diff(this.obj, this.entity, this.creator, this.timestamp, this.id ? this.id : null, this.linkId ? this.linkId : null);
+        return new Diff(this.obj, this.objId, this.entity, this.creator, this.timestamp,
+            this.id ? this.id : null, this.linkId ? this.linkId : null);
     }
 }

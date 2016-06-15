@@ -51,7 +51,8 @@ describe('The EntryAppService\'s', () => {
             findLatestSnapshotBefore = sinon.spy(eas.storage, 'findLatestSnapshotBefore');
             findLatestDiffBefore = sinon.spy(eas.storage, 'findLatestDiffBefore');
             diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
-                return new Diff(storage.testDiffObj, entity, storage.creator, findTimestamp);
+                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                    entity, storage.creator, findTimestamp);
             });
         });
         beforeEach('reset storage mock', () => {
@@ -98,7 +99,8 @@ describe('The EntryAppService\'s', () => {
         });
         it('should insert correctly created Diff with linkId', () => {
             eas.saveSnapshotAndDiff(storage.testSnapObj, storage.creator, searchTimestamp);
-            let insertedDiff: Diff = new Diff(storage.testDiffObj, entity, storage.creator, findTimestamp);
+            let insertedDiff: Diff = new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                entity, storage.creator, findTimestamp);
             insertedDiff.linkToId('0011223344');
             expect(insertDiff.calledOnce).to.be.ok();
             let arg: Diff = insertDiff.getCall(0).args[0];
@@ -110,7 +112,8 @@ describe('The EntryAppService\'s', () => {
                 = eas.saveSnapshotAndDiff(storage.testSnapObj, storage.creator, searchTimestamp);
             let expected: { snapshot?: Snapshot, diff?: Diff } = {
                 snapshot: new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp, '0011223344'),
-                diff: new Diff(storage.testDiffObj, entity, storage.creator, findTimestamp, '1234567890', '0011223344')
+                diff: new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                    entity, storage.creator, findTimestamp, '1234567890', '0011223344')
             };
             expect(result).to.eql(expected);
         });
@@ -164,7 +167,8 @@ describe('The EntryAppService\'s', () => {
             findLatestSnapshotBefore = sinon.spy(eas.storage, 'findLatestSnapshotBefore');
             findLatestDiffBefore = sinon.spy(eas.storage, 'findLatestDiffBefore');
             diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
-                return new Diff(storage.testDiffObj, entity, storage.creator, findTimestamp);
+                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                    entity, storage.creator, findTimestamp);
             });
         });
         beforeEach('reset storage mock', () => {
@@ -196,7 +200,9 @@ describe('The EntryAppService\'s', () => {
             eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp);
             expect(insertSnapshot.called).not.to.be.ok();
             expect(upsertSnapshot.calledOnce).to.be.ok();
-            expect(upsertSnapshot.getCall(0).args[0]).to.eql(new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp, '0100000000'));
+            expect(upsertSnapshot.getCall(0).args[0]).to.eql(
+                new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp, '0100000000')
+            );
         });
         it('should diff correct Snapshots', () => {
             eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp);
@@ -211,7 +217,8 @@ describe('The EntryAppService\'s', () => {
         });
         it('should insert correctly created Diff without linkId', () => {
             eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp);
-            let insertedDiff: Diff = new Diff(storage.testDiffObj, entity, storage.creator, findTimestamp);
+            let insertedDiff: Diff = new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                entity, storage.creator, findTimestamp);
             expect(insertDiff.calledOnce).to.be.ok();
             let arg: Diff = insertDiff.getCall(0).args[0];
             expect(arg instanceof Diff).to.be.ok();
@@ -219,8 +226,57 @@ describe('The EntryAppService\'s', () => {
         });
         it('should return diff object', () => {
             let result: Diff = eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp);
-            expect(result).to.eql(new Diff(storage.testDiffObj, entity, storage.creator, findTimestamp, '1234567890'));
+            expect(result).to.eql(new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                entity, storage.creator, findTimestamp, '1234567890'));
         });
     });
-    // TODO: unit test eas.diff/formatDiff as well
+
+    describe('diff method', () => {
+        let deepDiff: sinon.SinonSpy;
+
+        let snapOne: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, new Date('Dec 5, 1995')),
+            snapTwo: Snapshot = new Snapshot(storage.testSnapObj2, entity, storage.creator, new Date('Dec 25, 1995'));
+
+        before('spy deepDiff method', () => {
+            deepDiff = sinon.spy(eas, 'deepDiff');
+        });
+        beforeEach('reset deepDiff spy', () => {
+            deepDiff.reset();
+        });
+        after('restore deepDiff spy', () => {
+            deepDiff.restore();
+        });
+
+        it('should throw an error if the object ids differ', (done) => {
+            let one = snapOne.clone();
+            one.objId = '00000000';
+            expect(eas.diff).withArgs(one, snapTwo).to.throwError((err) => {
+                expect(err).to.be.ok();
+                expect(err).to.eql(new Error('Diffed snapshots are not of same object'));
+                done();
+            });
+        });
+        it('should throw an error if the entities differ', (done) => {
+            let one = snapOne.clone();
+            one.entity = new Entity('someDifferingObjClass', 'different.id.path');
+            expect(eas.diff).withArgs(one, snapTwo).to.throwError((err) => {
+                expect(err).to.be.ok();
+                expect(err).to.eql(new Error('Diffed snapshots are not of same entity'));
+                done();
+            });
+        });
+        it('should swap the snapshots if wrong timebased order', () => {
+            eas.diff(snapTwo, snapOne);
+            expect(deepDiff.calledThrice).to.be.ok(); // recursion
+            expect(deepDiff.getCall(0).args[0]).to.eql(snapOne.obj);
+            expect(deepDiff.getCall(0).args[1]).to.eql(snapTwo.obj);
+        });
+        it('should return correctly created Diff object', () => {
+            let result = eas.diff(snapOne, snapTwo);
+            expect(result instanceof Diff).to.be.ok();
+            expect(result).to.eql(
+                new Diff(eas.deepDiff(snapOne.obj, snapTwo.obj), snapTwo.objId, snapTwo.entity, snapTwo.creator, snapTwo.timestamp)
+            );
+        });
+    });
 });

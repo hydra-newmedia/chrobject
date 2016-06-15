@@ -18,11 +18,11 @@ export class Snapshot implements Entry {
     id: string;
     entity: Entity;
     creator: Creator;
-    obj: Object | Object[];
+    obj: Object;
     objId: string;
     timestamp: Date;
 
-    constructor(obj: Object | Object[], entity: Entity, creator: Creator, timestamp: Date, id?: string) {
+    constructor(obj: Object, entity: Entity, creator: Creator, timestamp: Date, id?: string) {
         this.entity = entity;
         this.creator = creator;
         this.obj = obj;

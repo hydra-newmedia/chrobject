@@ -10,12 +10,13 @@
  *  Imports
  */
 import * as _ from 'lodash';
-import { diff } from 'deep-diff';
 import { Entity } from '../utils/Entity';
 import { Snapshot } from '../utils/Snapshot';
 import { Diff } from '../utils/Diff';
 import { Creator } from '../utils/Creator';
 import { StorageStrategy } from '../storage/StorageStrategy';
+import { IDeepDiff } from '../utils/IDeepDiff';
+import { DeepDiff } from '../utils/DeepDiff';
 
 export class EntryAppService {
     entity: Entity;
@@ -51,7 +52,11 @@ export class EntryAppService {
         return this.storage.insertDiff(diff);
     }
 
-    private diff(snapOne: Snapshot, snapTwo: Snapshot): Diff {
+    diff(snapOne: Snapshot, snapTwo: Snapshot): Diff {
+        // Check if snapshots are of same object
+        if (snapOne.objId !== snapTwo.objId) {
+            throw new Error('Diffed snapshots are not of same object');
+        }
         // Check if snapshots are of same entity
         if (!snapOne.entity.equals(snapTwo.entity)) {
             throw new Error('Diffed snapshots are not of same entity');
@@ -64,76 +69,41 @@ export class EntryAppService {
         }
 
         // diff between the two snapshots
-        let diffObj: FormatedDeepDiff[] = this.formatDeepDiffObj(diff(snapOne.obj, snapTwo.obj));
+        let diffObj: IDeepDiff[] = this.deepDiff(snapOne.obj, snapTwo.obj);
 
-        return new Diff(diffObj, snapTwo.entity, snapTwo.creator, snapTwo.timestamp);
+        return new Diff(diffObj, snapTwo.objId, snapTwo.entity, snapTwo.creator, snapTwo.timestamp);
     }
 
-    private formatDeepDiffObj(deepDiff: DeepDiff[]): FormatedDeepDiff[] {
-        return _.map<DeepDiff, FormatedDeepDiff>(deepDiff, (value: DeepDiff): FormatedDeepDiff => {
-                let path = value.path.join('.');
-                switch (_.get(value, 'kind')) {
-                    case 'N':
-                        return {
-                            action: 'created',
-                            created: true,
-                            propertyPath: path,
-                            newValue: value.rhs
-                        };
-                    case 'E':
-                         return {
-                            action: 'edited',
-                            edited: true,
-                            propertyPath: path,
-                            oldValue: value.lhs,
-                            newValue: value.rhs
-                        };
-                    case 'D':
-                        return {
-                            action: 'deleted',
-                            deleted: true,
-                            propertyPath: path,
-                            newValue: value.rhs
-                        };
-                    case 'A':
-                        switch (value.item.kind) {
-                            case 'N':
-                                return {
-                                    action: 'added',
-                                    edited: true,
-                                    propertyPath: path,
-                                    newValue: value.rhs
-                                };
-                            case 'D':
-                                return {
-                                    action: 'removed',
-                                    edited: true,
-                                    propertyPath: path,
-                                    oldValue: value.lhs
-                                };
-                        }
+    deepDiff(one: Object, two: Object, path: string = ''): IDeepDiff[] {
+        let result: IDeepDiff[] = [];
+        for (var key of _.keys(one)) {
+            let concatPath: string = path ? path + '.' + key : key;
+            if (_.isPlainObject(one[key])) {
+                if (!_.has(two, key)) {
+                    result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                } else {
+                    result = _.concat(result, this.deepDiff(one[key], two[key], path ? path + '.' + key : key));
                 }
-            });
+            } if (_.isBoolean(one[key]) || _.isDate(one[key]) || _.isNumber(one[key])
+                || _.isNull(one[key]) || _.isRegExp(one[key]) || _.isString(one[key])) {
+                if (!_.has(two, key)) {
+                    result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                } else if (_.get(one, key) !== _.get(two, key)) {
+                    result.push(new DeepDiff('edited', concatPath, one[key], two[key]));
+                }
+            } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
+                result.push(new DeepDiff('array', concatPath, one[key], two[key]));
+            }
+        }
+        for (var key of _.keys(two)) {
+            let concatPath: string = path ? path + '.' + key : key;
+            if (!_.has(one, key)) {
+                if (_.isPlainObject(two[key]) || _.isBoolean(two[key]) || _.isDate(two[key]) || _.isNumber(two[key])
+                    || _.isNull(two[key]) || _.isRegExp(two[key]) || _.isString(two[key])) {
+                    result.push(new DeepDiff('created', concatPath, null, two[key]));
+                }
+            }
+        }
+        return result;
     }
 }
-
-interface DeepDiff {
-    kind: string;
-    path: Array<string>;
-    lhs?: any;
-    rhs?: any;
-    index?: number;
-    item?: DeepDiff;
-}
-
-interface FormatedDeepDiff {
-    action: DiffAction;
-    created?: boolean;
-    edited?: boolean;
-    deleted?: boolean;
-    propertyPath: string;
-    oldValue?: any;
-    newValue?: any;
-}
-
-type DiffAction = 'created' | 'edited' | 'deleted' | 'added' | 'removed';
