@@ -6,6 +6,11 @@
  *  Copyright hydra newmedia GmbH
  */
 
+/**
+ *  Imports
+ */
+import { ArrayDiff } from './ArrayDiff';
+
 export interface IDeepDiff {
     action: DiffAction; // 'created' | 'edited' | 'deleted' | 'array'
     created?: boolean; // true | undefined
@@ -19,21 +24,3 @@ export interface IDeepDiff {
 }
 
 export type DiffAction = 'created' | 'edited' | 'deleted' | 'array';
-
-export class ArrayDiff {
-    action: ArrayAction;
-    added: boolean;
-    removed: boolean;
-    index: number;
-    value: any;
-
-    constructor(action: ArrayAction, index: number, value: any) {
-        this.action = action;
-        this.added = action === 'added' ? true : undefined;
-        this.removed = action === 'removed' ? true : undefined;
-        this.index = index;
-        this.value = value;
-    }
-}
-
-export type ArrayAction = 'added' | 'removed';

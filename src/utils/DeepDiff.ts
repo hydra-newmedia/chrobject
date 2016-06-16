@@ -9,7 +9,8 @@
 /**
  *  Imports
  */
-import { IDeepDiff, DiffAction, ArrayDiff } from './IDeepDiff';
+import { IDeepDiff, DiffAction } from './IDeepDiff';
+import { ArrayDiff } from './ArrayDiff';
 
 export class DeepDiff implements IDeepDiff {
     action: DiffAction;
