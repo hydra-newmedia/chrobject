@@ -14,3 +14,4 @@ export * from './appservices/EntryAppServiceTest';
 export * from './controllers/ChrobjectTest';
 
 export * from './utils/CreatorTest';
+export * from './utils/DiffTest';

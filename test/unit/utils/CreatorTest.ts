@@ -22,7 +22,7 @@ describe('The Creator\'s', () => {
         });
         it('should set members properly', () => {
             let creator: Creator = new Creator('user', 'source');
-            expect(creator.user).to.ok();
+            expect(creator.user).to.be.ok();
             expect(creator.user).to.be('user');
             expect(creator.source).to.be.ok();
             expect(creator.source).to.be('source');
