@@ -21,7 +21,7 @@ export class DeepDiff implements IDeepDiff {
     propertyPath: string;
     oldValue: any;
     newValue: any;
-    arrayDiffs: ArrayDiff[];
+    arrayDiffs: { additions: ArrayDiff[], removals: ArrayDiff[] };
 
     constructor(action: DiffAction, propertyPath: string, oldValue: any, newValue: any) {
         this.action = action;
@@ -38,11 +38,11 @@ export class DeepDiff implements IDeepDiff {
     }
 
     setArrayDiffs(one: any[], two: any[]): void {
-        this.arrayDiffs = [];
+        this.arrayDiffs = { additions: [], removals: [] };
         let removed: number[] = [];
         for (var i = 0; i < one.length; i++) {
             if (two[i - removed.length] !== one[i]) {
-                this.arrayDiffs.push(new ArrayDiff('removed', i, one[i]));
+                this.arrayDiffs.removals.push(new ArrayDiff(i, one[i]));
                 removed.push(i);
             }
         }
@@ -52,7 +52,7 @@ export class DeepDiff implements IDeepDiff {
                 shift++;
             }
             if (one[i + shift] !== two[i]) {
-                this.arrayDiffs.push(new ArrayDiff('added', i, two[i]));
+                this.arrayDiffs.additions.push(new ArrayDiff(i, two[i]));
                 shift--;
             }
         }

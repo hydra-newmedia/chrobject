@@ -20,7 +20,7 @@ export interface IDeepDiff {
     propertyPath: string; // 'path.to.prop'
     oldValue?: any; // value before update (only set if action in [ 'edited' | 'deleted' | 'array' ])
     newValue?: any; // value after update (only set if action in [ 'created' | 'edited' | ])
-    arrayDiffs?: ArrayDiff[]; // array of diffs in array (only set if action 'array')
+    arrayDiffs?: { additions: ArrayDiff[], removals: ArrayDiff[] }; // lists of diffs in array (only set if action 'array')
 }
 
 export type DiffAction = 'created' | 'edited' | 'deleted' | 'array';
