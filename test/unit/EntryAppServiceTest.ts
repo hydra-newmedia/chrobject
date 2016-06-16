@@ -14,6 +14,7 @@ import * as _ from 'lodash';
 import { EntryAppService } from '../../lib/appservices/EntryAppService';
 import { Entity, Snapshot, Diff } from '../../lib';
 import { StorageStrategy } from './mock/StorageStrategy';
+import { DeepDiff } from '../../lib/utils/DeepDiff';
 
 let expect = require('expect.js');
 
@@ -277,6 +278,54 @@ describe('The EntryAppService\'s', () => {
             expect(result).to.eql(
                 new Diff(eas.deepDiff(snapOne.obj, snapTwo.obj), snapTwo.objId, snapTwo.entity, snapTwo.creator, snapTwo.timestamp)
             );
+        });
+    });
+
+    describe('deepDiff method', () => {
+        it('should return an empty array if no differences', () => {
+            let result = eas.deepDiff(storage.testSnapObj, storage.testSnapObj);
+            expect(result).to.eql([]);
+        });
+        it('should detect added properties', () => {
+            let result = eas.deepDiff({ a: { b: 'asdf' }}, { a: { b: 'asdf', c: 'ad'} });
+            expect(result).to.eql([
+                new DeepDiff('created', 'a.c', null, 'ad')
+            ]);
+        });
+        it('should detect added object properties', () => {
+            let result = eas.deepDiff({ a: { b: 'asdf' }}, { a: { b: 'asdf', c: { d: 'ad' } } });
+            expect(result).to.eql([
+                new DeepDiff('created', 'a.c', null, { d: 'ad' })
+            ]);
+        });
+        it('should detect edited properties', () => {
+            let result = eas.deepDiff({ a: { b: 'asdf', c: 1 }}, { a: { b: 'df', c: 'ad'} });
+            expect(result).to.eql([
+                new DeepDiff('edited', 'a.b', 'asdf', 'df'),
+                new DeepDiff('edited', 'a.c', 1, 'ad')
+            ]);
+        });
+        it('should detect deleted properties', () => {
+            let result = eas.deepDiff({ a: { b: 'asdf', c: 1 }}, { a: { b: 'asdf', } });
+            expect(result).to.eql([
+                new DeepDiff('deleted', 'a.c', 1, null)
+            ]);
+        });
+        it('should detect deleted object properties', () => {
+            let result = eas.deepDiff({ a: { b: 'asdf', c: { d: 'ad' } } }, { a: { b: 'asdf' } });
+            expect(result).to.eql([
+                new DeepDiff('deleted', 'a.c', { d: 'ad' }, null)
+            ]);
+        });
+        it('should notice array property changes', () => {
+            let result = eas.deepDiff({ a: { arr: ['a', 'b', 'c', 'd', 'e'] } }, { a: { arr: ['a', 'c', 'f', 'e', 'x'] } });
+            expect(result).to.eql([
+                new DeepDiff('array', 'a.arr', ['a', 'b', 'c', 'd', 'e'], ['a', 'c', 'f', 'e', 'x'])
+            ]);
+        });
+        it('should detect all in combination', () => {
+            let result = eas.deepDiff(storage.testSnapObj, storage.testSnapObj2);
+            expect(result).to.eql(storage.testDiffObj);
         });
     });
 });
