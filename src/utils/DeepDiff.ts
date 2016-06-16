@@ -30,8 +30,8 @@ export class DeepDiff implements IDeepDiff {
         this.deleted = action === 'deleted' ? true : undefined;
         this.array = action === 'array' ? true : undefined;
         this.propertyPath = propertyPath;
-        this.oldValue = oldValue ? oldValue : undefined;
-        this.newValue = newValue ? newValue : undefined;
+        this.oldValue = oldValue && action !== 'created' ? oldValue : undefined;
+        this.newValue = newValue && action !== 'deleted' ? newValue : undefined;
         if (action === 'array') {
             this.setArrayDiffs(oldValue, newValue);
         }

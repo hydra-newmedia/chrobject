@@ -15,6 +15,7 @@ export * from './controllers/ChrobjectTest';
 
 export * from './utils/ArrayDiffTest';
 export * from './utils/CreatorTest';
+export * from './utils/DeepDiffTest';
 export * from './utils/DiffTest';
 export * from './utils/EntityTest';
 export * from './utils/SnapshotTest';
