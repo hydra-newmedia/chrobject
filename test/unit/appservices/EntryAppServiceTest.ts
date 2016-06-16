@@ -11,10 +11,10 @@
  */
 import * as sinon from 'sinon';
 import * as _ from 'lodash';
-import { EntryAppService } from '../../lib/appservices/EntryAppService';
-import { Entity, Snapshot, Diff } from '../../lib';
-import { StorageStrategy } from './mock/StorageStrategy';
-import { DeepDiff } from '../../lib/utils/DeepDiff';
+import { EntryAppService } from '../../../lib/appservices/EntryAppService';
+import { Entity, Snapshot, Diff } from '../../../lib';
+import { StorageStrategy } from '../mocks/StorageStrategy';
+import { DeepDiff } from '../../../lib/utils/DeepDiff';
 
 let expect = require('expect.js');
 

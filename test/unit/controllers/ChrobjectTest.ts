@@ -18,12 +18,12 @@ import {
     Snapshot,
     Diff,
     Creator
-} from '../../lib';
-import { EntryAppService } from '../../lib/appservices/EntryAppService';
+} from '../../../lib';
+import { EntryAppService } from '../../../lib/appservices/EntryAppService';
 import * as sinon from 'sinon';
-import { StorageStrategy } from './mock/StorageStrategy';
-import { IDeepDiff } from '../../lib/utils/IDeepDiff';
-import { DeepDiff } from '../../lib/utils/DeepDiff';
+import { StorageStrategy } from '../mocks/StorageStrategy';
+import { IDeepDiff } from '../../../lib/utils/IDeepDiff';
+import { DeepDiff } from '../../../lib/utils/DeepDiff';
 
 let expect = require('expect.js');
 
