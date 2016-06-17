@@ -9,14 +9,15 @@
 /**
  *  Imports
  */
-import { IModel } from 'mongoose-repo';
 import * as _ from 'lodash';
-import { EntrySchema } from './EntrySchema';
+import * as mongoose from 'mongoose';
+import { IModel } from 'mongoose-repo';
 import { Entry } from '../../../utils/Entry';
-import { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
+import { IDeepDiff } from '../../../utils/IDeepDiff';
 
 export class EntryModel implements IModel<EntryDocument> {
-    _id: ObjectId | string;
+    _id: Types.ObjectId;
     __v: number;
     metadata: {
         creator: {
@@ -26,14 +27,14 @@ export class EntryModel implements IModel<EntryDocument> {
         timestamp: string,
         objId: string
     };
-    obj: Object | Object[];
+    obj: Object | IDeepDiff[];
 
     constructor(entry: Entry, objId?: string) {
         this.metadata = this.calcMetadata(entry, objId);
         this.obj = entry.obj;
     }
 
-    private calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string }, timestamp: Date, objId: string } {
+    private calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string }, timestamp: string, objId: string } {
         let objectId: string = objId ? objId : _.get<string>(entry.obj, entry.entity.idPath);
         return {
             creator: {
@@ -48,7 +49,3 @@ export class EntryModel implements IModel<EntryDocument> {
 
 export interface EntryDocument extends mongoose.Document, EntryModel {
 }
-
-let schema = new EntrySchema();
-
-export var EntryCollection = mongoose.model<EntryDocument>(schema.getName().toString(), schema.getSchema());

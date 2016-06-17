@@ -15,10 +15,10 @@ import { ISchema } from 'mongoose-repo';
 export class DiffSchema implements ISchema {
 
     private schema: Schema;
-    private name: String;
+    private name: string;
 
     constructor() {
-        this.name = 'Snapshot';
+        this.name = 'ChrobjectDiff';
         this.schema = new Schema({
             metadata: {
                 creator: {
@@ -32,7 +32,7 @@ export class DiffSchema implements ISchema {
         });
     }
 
-    getName(): String {
+    getName(): string {
         return this.name;
     }
 

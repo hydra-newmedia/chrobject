@@ -55,23 +55,25 @@ export class StorageStrategy implements chrobject.StorageStrategy {
         return new Date(timestamp.valueOf() - 60000);
     }
 
-    insertSnapshot(snapshot: chrobject.Snapshot): chrobject.Snapshot {
-        return snapshot.clone().setId('0011223344');
+    insertSnapshot(snapshot: chrobject.Snapshot, callback: (err: Error, snapshot: chrobject.Snapshot) => void) {
+        callback(null, snapshot.clone().setId('0011223344'));
     }
 
-    upsertSnapshot(snapshot: chrobject.Snapshot): chrobject.Snapshot {
-        return snapshot.clone().setId(snapshot.id ? snapshot.id : '0123456789');
+    upsertSnapshot(snapshot: chrobject.Snapshot, callback: (err: Error, snapshot: chrobject.Snapshot) => void) {
+        callback(null, snapshot.clone().setId(snapshot.id ? snapshot.id : '0123456789'));
     }
 
-    insertDiff(diff: chrobject.Diff): chrobject.Diff {
-        return diff.clone().setId('1234567890');
+    insertDiff(diff: chrobject.Diff, callback: (err: Error, diff: chrobject.Diff) => void) {
+        callback(null, diff.clone().setId('1234567890'));
     }
 
-    findLatestSnapshotBefore(id: string, timestamp: Date, entity: chrobject.Entity): chrobject.Snapshot {
-        return new chrobject.Snapshot(this.testSnapObj, entity, this.creator, this.oneMinuteBefore(timestamp), '0100000000');
+    findLatestSnapshotBefore(id: string, timestamp: Date, entity: chrobject.Entity,
+                             callback: (err: Error, snapshot: chrobject.Snapshot) => void) {
+        callback(null, new chrobject.Snapshot(this.testSnapObj, entity, this.creator, this.oneMinuteBefore(timestamp), '0100000000'));
     }
 
-    findLatestDiffBefore(id: string, timestamp: Date, entity: chrobject.Entity): chrobject.Diff {
-        return new chrobject.Diff(this.testDiffObj, _.get<string>(this.testDiffObj, entity.idPath), entity, this.creator, this.oneMinuteBefore(timestamp), '0200000000');
+    findLatestDiffBefore(id: string, timestamp: Date, entity: chrobject.Entity, callback: (err: Error, diff: chrobject.Diff) => void) {
+        callback(null, new chrobject.Diff(this.testDiffObj, _.get<string>(this.testDiffObj, entity.idPath),
+            entity, this.creator, this.oneMinuteBefore(timestamp), '0200000000'));
     }
 }

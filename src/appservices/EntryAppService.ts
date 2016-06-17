@@ -27,29 +27,49 @@ export class EntryAppService {
         this.storage = storage;
     }
 
-    saveSnapshotAndDiff(obj: Object, creator: Creator, timestamp: Date): { snapshot: Snapshot, diff: Diff } {
+    saveSnapshotAndDiff(obj: Object, creator: Creator, timestamp: Date,
+                        callback: (err: Error, result?: { snapshot?: Snapshot, diff?: Diff }) => void) {
         let id: string = _.get<string>(obj, this.entity.idPath);
-        let oldSnap: Snapshot = this.storage.findLatestSnapshotBefore(id, timestamp, this.entity);
-        let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp);
-        newSnap = this.storage.insertSnapshot(newSnap);
-        let diff: Diff = this.diff(oldSnap, newSnap);
-        diff.linkToId(newSnap.id);
-        diff = this.storage.insertDiff(diff);
-        return { snapshot: newSnap, diff: diff };
+        this.storage.findLatestSnapshotBefore(id, timestamp, this.entity, (err: Error, oldSnap: Snapshot) => {
+            if (err) {
+                return callback(err);
+            }
+            let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp);
+            this.storage.insertSnapshot(newSnap, (err: Error, newSnap: Snapshot) => {
+                if (err) {
+                    return callback(err);
+                }
+                let diff: Diff = this.diff(oldSnap, newSnap);
+                diff.linkToId(newSnap.id);
+                this.storage.insertDiff(diff, (err: Error, diff: Diff) => {
+                    if (callback) {
+                        callback(err, { snapshot: newSnap, diff: diff });
+                    }
+                });
+            });
+        });
     }
 
-    saveSnapshot(obj: Object, creator: Creator, timestamp: Date): Snapshot {
+    saveSnapshot(obj: Object, creator: Creator, timestamp: Date, callback: (err: Error, snapshot?: Snapshot) => void) {
         let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp);
-        return this.storage.insertSnapshot(newSnap);
+        this.storage.insertSnapshot(newSnap, callback);
     }
 
-    saveDiff(obj: Object, creator: Creator, timestamp: Date): Diff {
+    saveDiff(obj: Object, creator: Creator, timestamp: Date, callback: (err: Error, diff?: Diff) => void) {
         let id: string = _.get<string>(obj, this.entity.idPath);
-        let oldSnap: Snapshot = this.storage.findLatestSnapshotBefore(id, timestamp, this.entity);
-        let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp, oldSnap.id);
-        newSnap = this.storage.upsertSnapshot(newSnap);
-        let diff: Diff = this.diff(oldSnap, newSnap);
-        return this.storage.insertDiff(diff);
+        this.storage.findLatestSnapshotBefore(id, timestamp, this.entity, (err: Error, oldSnap: Snapshot) => {
+            if (err) {
+                return callback(err);
+            }
+            let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp, oldSnap.id);
+            this.storage.upsertSnapshot(newSnap, (err: Error, newSnap: Snapshot) => {
+                if (err) {
+                    return callback(err);
+                }
+                let diff: Diff = this.diff(oldSnap, newSnap);
+                this.storage.insertDiff(diff, callback ? callback : undefined);
+            });
+        });
     }
 
     diff(snapOne: Snapshot, snapTwo: Snapshot): Diff {
@@ -84,7 +104,8 @@ export class EntryAppService {
                 } else {
                     result = _.concat(result, this.deepDiff(one[key], two[key], path ? path + '.' + key : key));
                 }
-            } if (_.isBoolean(one[key]) || _.isDate(one[key]) || _.isNumber(one[key])
+            }
+            if (_.isBoolean(one[key]) || _.isDate(one[key]) || _.isNumber(one[key])
                 || _.isNull(one[key]) || _.isRegExp(one[key]) || _.isString(one[key])) {
                 if (!_.has(two, key)) {
                     result.push(new DeepDiff('deleted', concatPath, one[key], null));

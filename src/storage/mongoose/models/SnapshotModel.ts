@@ -9,9 +9,10 @@
 /**
  *  Imports
  */
+import * as mongoose from 'mongoose';
 import { IModel } from 'mongoose-repo';
 import { SnapshotSchema } from './SnapshotSchema';
-import { Snapshot } from '../../../utils';
+import { Snapshot } from '../../../utils/Snapshot';
 import { EntryModel } from './EntryModel';
 
 export class SnapshotModel extends EntryModel implements IModel<SnapshotDocument> {
@@ -25,4 +26,4 @@ export interface SnapshotDocument extends mongoose.Document, SnapshotModel {
 
 let schema = new SnapshotSchema();
 
-export var SnapshotCollection = mongoose.model<SnapshotDocument>(schema.getName().toString(), schema.getSchema());
+export var SnapshotCollection = mongoose.model<SnapshotDocument>(schema.getName(), schema.getSchema());

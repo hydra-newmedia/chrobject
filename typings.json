@@ -1,11 +1,13 @@
 {
   "dependencies": {
     "lodash": "registry:npm/lodash#4.0.0+20160416211519",
-    "mongoose": "registry:npm/mongoose#4.3.5+20160610145311"
+    "mongoose": "registry:npm/mongoose#4.3.5+20160610145311",
+    "request": "registry:npm/request#2.69.0+20160428223725"
   },
   "globalDependencies": {
     "node": "registry:dt/node#6.0.0+20160608110640",
-    "object-hash": "registry:dt/object-hash#0.5.0+20160317120654"
+    "object-hash": "registry:dt/object-hash#0.5.0+20160317120654",
+    "winston": "registry:dt/winston#0.0.0+20160417152829"
   },
   "globalDevDependencies": {
     "expect.js": "registry:dt/expect.js#0.3.1+20160317120654",

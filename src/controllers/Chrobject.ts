@@ -29,17 +29,46 @@ export class Chrobject {
         this.appService = new EntryAppService(entity, storage);
     }
 
-    saveEntry(obj: Object, creator: Creator, timestamp?: Date): { snapshot?: Snapshot, diff?: Diff } {
+    saveEntry(obj: Object, creator: Creator, timestamp?: Date,
+              callback?: (err: Error, result?: { snapshot?: Snapshot, diff?: Diff }) => void) {
         if (!timestamp) {
             timestamp = new Date();
         }
         switch (this.config) {
             case Configuration.SNAP_AND_DIFF:
-                return this.appService.saveSnapshotAndDiff(obj, creator, timestamp);
+                this.appService.saveSnapshotAndDiff(obj, creator, timestamp,
+                    (err: Error, result?: { snapshot?: Snapshot, diff?: Diff }) => {
+                    if (err && callback) {
+                        callback(err);
+                    } else if (callback) {
+                        callback(null, result ? result : {});
+                    } else {
+                        console.log('ÄÄÄÄÄ')
+                    }
+                });
+                break;
             case Configuration.SNAP_ONLY:
-                return { snapshot: this.appService.saveSnapshot(obj, creator, timestamp) };
+                this.appService.saveSnapshot(obj, creator, timestamp, (err: Error, snapshot?: Snapshot) => {
+                    if (err && callback) {
+                        callback(err);
+                    } else if (callback) {
+                        callback(null, { snapshot: snapshot });
+                    } else {
+                        console.log('ÖÖÖÖÖ')
+                    }
+                });
+                break;
             case Configuration.DIFF_ONLY:
-                return { diff: this.appService.saveDiff(obj, creator, timestamp) };
+                this.appService.saveDiff(obj, creator, timestamp, (err: Error, diff?: Diff) => {
+                    if (err && callback) {
+                        callback(err);
+                    } else if (callback) {
+                        callback(null, { diff: diff });
+                    } else {
+                        console.log('ÜÜÜÜ')
+                    }
+                });
+                break;
         }
     }
 

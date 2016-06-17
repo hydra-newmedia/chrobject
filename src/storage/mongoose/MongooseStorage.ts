@@ -12,85 +12,88 @@
 import * as _ from 'lodash';
 import { Repository } from 'mongoose-repo';
 import { StorageStrategy } from '../StorageStrategy';
-import { Snapshot, Diff, Entity } from '../../utils';
-import { DiffDocument, DiffCollection } from './models/DiffModel';
+import { Snapshot } from '../../utils/Snapshot';
+import { IDeepDiff } from '../../utils/IDeepDiff';
+import { Diff } from '../../utils/Diff';
+import { Entity } from '../../utils/Entity';
+import { Creator } from '../../utils/Creator';
+import { DiffDocument, DiffCollection, DiffModel } from './models/DiffModel';
 import {
     SnapshotDocument,
     SnapshotCollection,
     SnapshotModel
 } from './models/SnapshotModel';
-import { Creator } from '../../../lib/utils/Creator';
 
 export class MongooseStorage implements StorageStrategy {
 
-    snapshotRepository: Repository;
-    diffRepository: Repository;
+    snapshotRepository: Repository<SnapshotDocument>;
+    diffRepository: Repository<DiffDocument>;
 
     constructor() {
         this.snapshotRepository = new Repository<SnapshotDocument>(SnapshotCollection);
         this.diffRepository = new Repository<DiffDocument>(DiffCollection);
     }
 
-    insertSnapshot(snapshot: Snapshot): Snapshot {
+    insertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void) {
         this.snapshotRepository.insert(new SnapshotModel(snapshot), (err: any, model?: SnapshotDocument) => {
             if (err || !model) {
-                throw err;
+                callback(err);
             } else {
-                return snapshot.clone().setId(model._id.toString());
+                callback(null, snapshot.clone().setId(model._id.toString()));
             }
         });
     }
 
-    upsertSnapshot(snapshot: Snapshot): Snapshot {
+    upsertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void) {
         let updateCondition = { 'metadata.objId': snapshot.objId };
         this.snapshotRepository.updateByCondition(updateCondition, new SnapshotModel(snapshot),
             (err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
-                    throw err;
+                    callback(err);
                 } else {
-                    return snapshot.clone().setId(model._id.toString());
+                    callback(null, snapshot.clone().setId(model._id.toString()));
                 }
             }
         );
     }
 
-    insertDiff(diff: Diff): Diff {
+    insertDiff(diff: Diff, callback: (err: Error, diff?: Diff) => void) {
         this.diffRepository.insert(new DiffModel(diff), (err: any, model?: DiffDocument) => {
                 if (err || !model) {
-                    throw err;
+                    callback(err);
                 } else {
-                    return diff.clone().setId(model._id.toString());
+                    callback(null, diff.clone().setId(model._id.toString()));
                 }
             }
         );
     }
 
-    findLatestSnapshotBefore(id: string, timestamp: Date, entity: Entity): Snapshot {
+    findLatestSnapshotBefore(id: string, timestamp: Date, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
         let searchCondition = {};
         _.set(searchCondition, entity.idPath, id);
         SnapshotCollection.findOne(searchCondition).sort({ 'metadata.timestamp': -1 })
             .exec((err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
-                    throw err;
+                    callback(err);
                 } else {
-                    let creator = new Creator(model.metadata.creator.user, model.metadata.creator.source);
-                    let timestamp = Date.parse(model.metadata.timestamp);
-                    return new Snapshot(model.obj, entity, creator, timestamp, model._id.toString());
+                    let creator: Creator = new Creator(model.metadata.creator.user, model.metadata.creator.source);
+                    let timestamp: Date = new Date(Date.parse(model.metadata.timestamp));
+                    callback(null, new Snapshot(model.obj, entity, creator, timestamp, model._id.toString()));
                 }
             });
     }
 
-    findLatestDiffBefore(id: string, timestamp: Date, entity: Entity): Diff {
+    findLatestDiffBefore(id: string, timestamp: Date, entity: Entity, callback: (err: Error, diff?: Diff) => void) {
         let searchCondition = {};
         _.set(searchCondition, entity.idPath, id);
         DiffCollection.findOne(searchCondition).sort({ 'metadata.timestamp': -1 })
             .exec((err: any, model?: DiffDocument) => {
                 if (err || !model) {
-                    throw err;
+                    callback(err);
                 } else {
                     let creator = new Creator(model.metadata.creator.user, model.metadata.creator.source);
-                    let timestamp = Date.parse(model.metadata.timestamp);
-                    return new Diff(model.obj, entity, creator, timestamp, model._id.toString());
+                    let timestamp: Date = new Date(Date.parse(model.metadata.timestamp));
+                    callback(null, new Diff(<IDeepDiff[]> model.obj, id, entity, creator, timestamp, model._id.toString()));
                 }
             });
     }

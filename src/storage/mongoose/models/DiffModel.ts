@@ -9,9 +9,10 @@
 /**
  *  Imports
  */
+import * as mongoose from 'mongoose';
 import { IModel } from 'mongoose-repo';
 import { DiffSchema } from './DiffSchema';
-import { Diff } from '../../../utils';
+import { Diff } from '../../../utils/Diff';
 import { EntryModel } from './EntryModel';
 
 export class DiffModel extends EntryModel implements IModel<DiffDocument> {
@@ -25,4 +26,4 @@ export interface DiffDocument extends mongoose.Document, DiffModel {
 
 let schema = new DiffSchema();
 
-export var DiffCollection = mongoose.model<DiffDocument>(schema.getName().toString(), schema.getSchema());
+export var DiffCollection = mongoose.model<DiffDocument>(schema.getName(), schema.getSchema());

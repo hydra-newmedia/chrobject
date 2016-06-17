@@ -19,3 +19,4 @@ export * from './utils/Entry';
 export * from './utils/Snapshot';
 
 export * from './storage/StorageStrategy';
+export * from './storage/mongoose/MongooseStorage';

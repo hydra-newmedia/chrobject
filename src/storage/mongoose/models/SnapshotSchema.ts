@@ -15,10 +15,10 @@ import { ISchema } from 'mongoose-repo';
 export class SnapshotSchema implements ISchema {
 
     private schema: Schema;
-    private name: String;
+    private name: string;
 
     constructor() {
-        this.name = 'Snapshot';
+        this.name = 'ChrobjectSnapshot';
         this.schema = new Schema({
             metadata: {
                 creator: {
@@ -31,7 +31,7 @@ export class SnapshotSchema implements ISchema {
         });
     }
 
-    getName(): String {
+    getName(): string {
         return this.name;
     }
 
