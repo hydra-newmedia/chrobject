@@ -31,13 +31,14 @@
   "dependencies": {
     "lodash": "^4.13.1",
     "mongoose": "^4.4.20",
-    "mongoose-repo": "^0.1.2"
+    "mongoose-repo": "^0.1.2",
+    "object-hash": "^1.1.2"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
     "mocha": "^2.5.3",
     "sinon": "^1.17.4",
     "typescript": "^1.8.10",
-    "typings": "^1.1.0"
+    "typings": "^1.2.0"
   }
 }

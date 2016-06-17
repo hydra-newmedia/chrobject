@@ -9,19 +9,16 @@
 /**
  *  Imports
  */
+import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import { DeepDiff } from '../../../lib/utils/DeepDiff';
-import { ArrayDiff } from '../../../lib/utils/ArrayDiff';
+import { DeepDiff, ArrayDiff } from '../../../lib';
 
 let expect = require('expect.js');
 
 describe('The DeepDiff\'s', () => {
     describe('constructor', () => {
         let setArrayDiffs: sinon.SinonStub;
-        let testArrayDiffs: { additions: ArrayDiff[], removals: ArrayDiff[] } = {
-            additions: [new ArrayDiff(1, 'c'), new ArrayDiff(2, 'd')],
-            removals: [new ArrayDiff(1, 'a'), new ArrayDiff(2, 'b')]
-        };
+        let testArrayDiffs: ArrayDiff[] = [new ArrayDiff('added', 1, 'a'), new ArrayDiff('moved', 2, 'b', 3)];
         before('mock setArrayDiffs', () => {
             setArrayDiffs = sinon.stub(DeepDiff.prototype, 'setArrayDiffs', function(one: any[], two: any[]) {
                 this.arrayDiffs = testArrayDiffs;
@@ -131,4 +128,63 @@ describe('The DeepDiff\'s', () => {
         });
     });
 
+    describe('setArrayDiffs method', () => {
+        let testArray: any[] = 'abcdefghij'.split('');
+        it('should detect additions properly', () => {
+            let deepDiff: DeepDiff = new DeepDiff('array', 'a.b', testArray, '0ab1cd2e34fghi5j6'.split(''));
+            expect(_.filter(deepDiff.arrayDiffs, ['action', 'added'])).to.eql([
+                new ArrayDiff('added', 0, '0'),
+                new ArrayDiff('added', 3, '1'),
+                new ArrayDiff('added', 6, '2'),
+                new ArrayDiff('added', 8, '3'),
+                new ArrayDiff('added', 9, '4'),
+                new ArrayDiff('added', 14, '5'),
+                new ArrayDiff('added', 16, '6')
+            ]);
+        });
+        it('should detect removals properly', () => {
+            let deepDiff: DeepDiff = new DeepDiff('array', 'a.b', testArray, 'bcegi'.split(''));
+            expect(_.filter(deepDiff.arrayDiffs, ['action', 'removed'])).to.eql([
+                new ArrayDiff('removed', 0, 'a'),
+                new ArrayDiff('removed', 3, 'd'),
+                new ArrayDiff('removed', 5, 'f'),
+                new ArrayDiff('removed', 7, 'h'),
+                new ArrayDiff('removed', 9, 'j')
+            ]);
+        });
+        it('should detect movements properly', () => {
+            let deepDiff: DeepDiff = new DeepDiff('array', 'a.b', testArray, 'bijahgdecf'.split(''));
+            expect(_.filter(deepDiff.arrayDiffs, ['action', 'moved'])).to.eql([
+                new ArrayDiff('moved', 0, 'a', 3),
+                new ArrayDiff('moved', 1, 'b', 0),
+                new ArrayDiff('moved', 2, 'c', 8),
+                new ArrayDiff('moved', 3, 'd', 6),
+                new ArrayDiff('moved', 4, 'e', 7),
+                new ArrayDiff('moved', 5, 'f', 9),
+                new ArrayDiff('moved', 6, 'g', 5),
+                new ArrayDiff('moved', 7, 'h', 4),
+                new ArrayDiff('moved', 8, 'i', 1),
+                new ArrayDiff('moved', 9, 'j', 2)
+            ]);
+        });
+        it('should detect all changes properly', () => {
+            let deepDiff: DeepDiff = new DeepDiff('array', 'a.b', testArray, '0bij1g1dc2f3'.split(''));
+            expect(deepDiff.arrayDiffs).to.eql([
+                new ArrayDiff('removed', 0, 'a'),
+                new ArrayDiff('moved', 2, 'c', 8),
+                new ArrayDiff('moved', 3, 'd', 7),
+                new ArrayDiff('removed', 4, 'e'),
+                new ArrayDiff('moved', 5, 'f', 10),
+                new ArrayDiff('moved', 6, 'g', 5),
+                new ArrayDiff('removed', 7, 'h'),
+                new ArrayDiff('moved', 8, 'i', 2),
+                new ArrayDiff('moved', 9, 'j', 3),
+                new ArrayDiff('added', 0, '0'),
+                new ArrayDiff('added', 4, '1'),
+                new ArrayDiff('added', 6, '1'),
+                new ArrayDiff('added', 9, '2'),
+                new ArrayDiff('added', 11, '3'),
+            ]);
+        });
+    });
 });
