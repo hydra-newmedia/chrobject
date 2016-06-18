@@ -39,6 +39,7 @@ let goodSnap: Snapshot = new Snapshot({
 }, entity, creator, timestamp);
 let badSnap: Snapshot = new Snapshot({ a: { identificator: 'good' } }, entity, creator, timestamp);
 let goodDiff: Diff = new Diff([new DeepDiff('created', 'a.b', null, 'adsf')], 'good', entity, creator, timestamp);
+let badDiff: Diff = new Diff([], 'bad', entity, creator, timestamp);
 
 let SnapshotDoc = {
     _id: new Types.ObjectId('123456789012345678901234'),
@@ -142,8 +143,9 @@ describe('The MongooseStorage\'s', () => {
     });
     describe('insertSnapshot method', () => {
         it('should call snapshot mongoose repo\'s insert method with correct model', (done) => {
-            mongooseStorage.insertSnapshot(goodSnap, (err: Error, snapshot: Snapshot) => {
+            mongooseStorage.insertSnapshot(goodSnap, () => {
                 expect(snapInsert.calledOnce).to.be.ok();
+                expect(snapInsert.getCall(0).args[0]).to.eql(new SnapshotModel(goodSnap));
                 done();
             });
         });
@@ -152,6 +154,7 @@ describe('The MongooseStorage\'s', () => {
                 expect(err).to.be.ok();
                 expect(err instanceof Error).to.be.ok();
                 expect(err.message).to.be('snapshot repo insert error');
+                expect(snapshot).not.to.be.ok();
                 done();
             });
         });
@@ -160,6 +163,32 @@ describe('The MongooseStorage\'s', () => {
                 expect(err).not.to.be.ok();
                 expect(snapshot).to.be.ok();
                 expect(snapshot).to.eql(goodSnap.clone().setId('123456789012345678901234'));
+                done();
+            });
+        });
+    });
+    describe('insertDiff diff', () => {
+        it('should call snapshot mongoose repo\'s insert method with correct model', (done) => {
+            mongooseStorage.insertDiff(goodDiff, () => {
+                expect(diffInsert.calledOnce).to.be.ok();
+                expect(diffInsert.getCall(0).args[0]).to.eql(new DiffModel(goodDiff));
+                done();
+            });
+        });
+        it('should yield error if not successful', (done) => {
+            mongooseStorage.insertDiff(badDiff, (err: Error, diff: Diff) => {
+                expect(err).to.be.ok();
+                expect(err instanceof Error).to.be.ok();
+                expect(err.message).to.be('diff repo insert error');
+                expect(diff).not.to.be.ok();
+                done();
+            });
+        });
+        it('should yield diff with id on success', (done) => {
+            mongooseStorage.insertDiff(goodDiff, (err: Error, diff: Diff) => {
+                expect(err).not.to.be.ok();
+                expect(diff).to.be.ok();
+                expect(diff).to.eql(goodDiff.clone().setId('012345678901234567890123'));
                 done();
             });
         });
