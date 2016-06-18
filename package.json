@@ -29,9 +29,10 @@
     "test": "node_modules/mocha/bin/mocha testDist/* -R nyan --recursive"
   },
   "dependencies": {
+    "be-utils": "^1.0.0",
     "lodash": "^4.13.1",
     "mongoose": "^4.4.20",
-    "mongoose-repo": "^0.1.2",
+    "mongoose-repo": "^1.0.1",
     "object-hash": "^1.1.2"
   },
   "devDependencies": {

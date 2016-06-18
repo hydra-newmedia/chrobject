@@ -11,6 +11,7 @@
  */
 import * as _ from 'lodash';
 import { Repository } from 'mongoose-repo';
+import { LoggerConfig } from 'be-utils';
 import { StorageStrategy } from '../StorageStrategy';
 import { Snapshot } from '../../utils/Snapshot';
 import { IDeepDiff } from '../../utils/IDeepDiff';
@@ -23,15 +24,16 @@ import {
     SnapshotCollection,
     SnapshotModel
 } from './models/SnapshotModel';
+import { LoggerInstance } from 'winston';
 
 export class MongooseStorage implements StorageStrategy {
 
     snapshotRepository: Repository<SnapshotDocument>;
     diffRepository: Repository<DiffDocument>;
 
-    constructor() {
-        this.snapshotRepository = new Repository<SnapshotDocument>(SnapshotCollection);
-        this.diffRepository = new Repository<DiffDocument>(DiffCollection);
+    constructor(loggerOrCfg: LoggerInstance | LoggerConfig) {
+        this.snapshotRepository = new Repository<SnapshotDocument>(SnapshotCollection, loggerOrCfg);
+        this.diffRepository = new Repository<DiffDocument>(DiffCollection, loggerOrCfg);
     }
 
     insertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void) {

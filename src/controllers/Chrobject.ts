@@ -42,8 +42,6 @@ export class Chrobject {
                         callback(err);
                     } else if (callback) {
                         callback(null, result ? result : {});
-                    } else {
-                        console.log('ÄÄÄÄÄ')
                     }
                 });
                 break;
@@ -53,8 +51,6 @@ export class Chrobject {
                         callback(err);
                     } else if (callback) {
                         callback(null, { snapshot: snapshot });
-                    } else {
-                        console.log('ÖÖÖÖÖ')
                     }
                 });
                 break;
@@ -64,8 +60,6 @@ export class Chrobject {
                         callback(err);
                     } else if (callback) {
                         callback(null, { diff: diff });
-                    } else {
-                        console.log('ÜÜÜÜ')
                     }
                 });
                 break;
