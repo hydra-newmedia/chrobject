@@ -38,6 +38,11 @@ export class Snapshot implements Entry {
         return this;
     }
 
+    setObjId(objId: string): Snapshot {
+        this.objId = objId;
+        return this;
+    }
+
     clone(): Snapshot {
         return new Snapshot(this.obj, this.entity, this.creator, this.timestamp, this.id ? this.id : null);
     }

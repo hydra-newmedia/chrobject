@@ -79,6 +79,28 @@ describe('The Snapshot\'s', () => {
         });
     });
 
+    describe('setObjId method', () => {
+        it('should set objId properly', () => {
+            let snap: Snapshot = new Snapshot(testObj, entity, creator, timestamp);
+            snap.setObjId('cccc');
+            expect(snap.objId).to.be.ok();
+            expect(snap.objId).to.be('cccc');
+        });
+        it('should overwrite id properly', () => {
+            let snap: Snapshot = new Snapshot(testObj, entity, creator, timestamp);
+            snap.setObjId('bbbb');
+            snap.setObjId('cccc');
+            expect(snap.objId).to.be.ok();
+            expect(snap.objId).to.be('cccc');
+        });
+        it('should return the Snapshot\'s instance', () => {
+            let snap: Snapshot = new Snapshot(testObj, entity, creator, timestamp);
+            let settedSnap: Snapshot = snap.setObjId('cccc');
+            expect(snap).to.equal(settedSnap);
+            expect(snap.objId).to.equal(settedSnap.objId);
+        });
+    });
+
     describe('clone method', () => {
         it('should return a similar Snapshot', () => {
             let snap: Snapshot = new Snapshot(testObj, entity, creator, timestamp, 'bbbb');

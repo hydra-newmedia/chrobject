@@ -126,7 +126,9 @@ describe('The EntryAppService\'s', () => {
             eas.saveSnapshotAndDiff(testObj, storage.creator, searchTimestamp, (err: Error) => {
                     expect(err).not.to.be.ok();
                     expect(diff.calledOnce).to.be.ok();
-                    expect(diff.getCall(0).args[0]).to.eql(new Snapshot({}, entity, storage.creator, searchTimestamp));
+                    expect(diff.getCall(0).args[0]).to.eql(
+                        (new Snapshot({}, entity, storage.creator, searchTimestamp)).setObjId('noSnapBefore')
+                    );
                     expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp, '0011223344'));
                     done();
                 }
@@ -276,7 +278,9 @@ describe('The EntryAppService\'s', () => {
             eas.saveDiff(testObj, storage.creator, searchTimestamp, (err: Error) => {
                     expect(err).not.to.be.ok();
                     expect(diff.calledOnce).to.be.ok();
-                    expect(diff.getCall(0).args[0]).to.eql(new Snapshot({}, entity, storage.creator, searchTimestamp));
+                    expect(diff.getCall(0).args[0]).to.eql(
+                        (new Snapshot({}, entity, storage.creator, searchTimestamp)).setObjId('noSnapBefore')
+                    );
                     expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp, '0123456789'));
                     done();
                 }
