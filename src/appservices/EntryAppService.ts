@@ -36,10 +36,14 @@ export class EntryAppService {
             }
             let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp);
             this.storage.insertSnapshot(newSnap, (err: Error, newSnap: Snapshot) => {
+                let diff: Diff;
                 if (err) {
                     return callback(err);
+                } else if (oldSnap) {
+                    diff = this.diff(oldSnap, newSnap);
+                } else {
+                    diff = this.diff(new Snapshot({}, this.entity, creator, timestamp), newSnap);
                 }
-                let diff: Diff = this.diff(oldSnap, newSnap);
                 diff.linkToId(newSnap.id);
                 this.storage.insertDiff(diff, (err: Error, diff: Diff) => {
                     if (callback) {
@@ -61,12 +65,16 @@ export class EntryAppService {
             if (err) {
                 return callback(err);
             }
-            let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp, oldSnap.id);
+            let newSnap: Snapshot = new Snapshot(obj, this.entity, creator, timestamp, oldSnap ? oldSnap.id : undefined);
             this.storage.upsertSnapshot(newSnap, (err: Error, newSnap: Snapshot) => {
+                let diff: Diff;
                 if (err) {
                     return callback(err);
+                } else if (oldSnap) {
+                    diff = this.diff(oldSnap, newSnap);
+                } else {
+                    diff = this.diff(new Snapshot({}, this.entity, creator, timestamp), newSnap);
                 }
-                let diff: Diff = this.diff(oldSnap, newSnap);
                 this.storage.insertDiff(diff, callback ? callback : undefined);
             });
         });

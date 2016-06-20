@@ -69,7 +69,11 @@ export class StorageStrategy implements chrobject.StorageStrategy {
 
     findLatestSnapshotBefore(id: string, timestamp: Date, entity: chrobject.Entity,
                              callback: (err: Error, snapshot: chrobject.Snapshot) => void) {
-        callback(null, new chrobject.Snapshot(this.testSnapObj, entity, this.creator, this.oneMinuteBefore(timestamp), '0100000000'));
+        if (id === 'noSnapBefore') {
+            callback(null, null);
+        } else {
+            callback(null, new chrobject.Snapshot(this.testSnapObj, entity, this.creator, this.oneMinuteBefore(timestamp), '0100000000'));
+        }
     }
 
     findLatestDiffBefore(id: string, timestamp: Date, entity: chrobject.Entity, callback: (err: Error, diff: chrobject.Diff) => void) {

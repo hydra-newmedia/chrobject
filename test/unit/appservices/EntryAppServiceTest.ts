@@ -120,17 +120,31 @@ describe('The EntryAppService\'s', () => {
                 done();
             });
         });
+        it('should create diff to {}-object if no older snap of that object', (done) => {
+            let testObj: Object = _.cloneDeep(storage.testSnapObj);
+            _.set(testObj, 'my.identificator', 'noSnapBefore');
+            eas.saveSnapshotAndDiff(testObj, storage.creator, searchTimestamp, (err: Error) => {
+                    expect(err).not.to.be.ok();
+                    expect(diff.calledOnce).to.be.ok();
+                    expect(diff.getCall(0).args[0]).to.eql(new Snapshot({}, entity, storage.creator, searchTimestamp));
+                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp, '0011223344'));
+                    done();
+                }
+            );
+        });
         it('should return object with both snapshot and diff', (done) => {
-            eas.saveSnapshotAndDiff(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error, result: { snapshot?: Snapshot, diff?: Diff }) => {
-                expect(err).not.to.be.ok();
-                let expected: { snapshot?: Snapshot, diff?: Diff } = {
-                    snapshot: new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp, '0011223344'),
-                    diff: new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
-                        entity, storage.creator, findTimestamp, '1234567890', '0011223344')
-                };
-                expect(result).to.eql(expected);
-                done();
-            });
+            eas.saveSnapshotAndDiff(storage.testSnapObj, storage.creator, searchTimestamp,
+                (err: Error, result: { snapshot?: Snapshot, diff?: Diff }) => {
+                    expect(err).not.to.be.ok();
+                    let expected: { snapshot?: Snapshot, diff?: Diff } = {
+                        snapshot: new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp, '0011223344'),
+                        diff: new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                            entity, storage.creator, findTimestamp, '1234567890', '0011223344')
+                    };
+                    expect(result).to.eql(expected);
+                    done();
+                }
+            );
         });
     });
 
@@ -210,7 +224,7 @@ describe('The EntryAppService\'s', () => {
         });
 
         it('should search for latest snapshot of correct id', (done) => {
-            eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) =>{
+            eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
                 expect(err).not.to.be.ok();
                 expect(findLatestSnapshotBefore.calledOnce).to.be.ok();
                 let call: sinon.SinonSpyCall = findLatestSnapshotBefore.getCall(0);
@@ -255,6 +269,18 @@ describe('The EntryAppService\'s', () => {
                 expect(arg).to.eql(insertedDiff);
                 done();
             });
+        });
+        it('should create diff to {}-object if no older snap of that object', (done) => {
+            let testObj: Object = _.cloneDeep(storage.testSnapObj);
+            _.set(testObj, 'my.identificator', 'noSnapBefore');
+            eas.saveDiff(testObj, storage.creator, searchTimestamp, (err: Error) => {
+                    expect(err).not.to.be.ok();
+                    expect(diff.calledOnce).to.be.ok();
+                    expect(diff.getCall(0).args[0]).to.eql(new Snapshot({}, entity, storage.creator, searchTimestamp));
+                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp, '0123456789'));
+                    done();
+                }
+            );
         });
         it('should return diff object', (done) => {
             eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error, result: Diff) => {
