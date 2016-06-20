@@ -6,7 +6,7 @@
  *  Copyright hydra newmedia GmbH
  */
 
-export { Chrobject as default } from './controllers/Chrobject';
+export { Chrobject as default, Chrobject } from './controllers/Chrobject';
 
 export * from './utils/ArrayDiff';
 export * from './utils/Configuration';
