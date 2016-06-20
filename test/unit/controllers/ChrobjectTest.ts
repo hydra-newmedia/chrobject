@@ -11,8 +11,8 @@
  */
 import * as _ from 'lodash';
 import {
+    default as Chrobject,
     StorageStrategy as LibStorageStrategy,
-    Chrobject,
     Entity,
     Configuration,
     Snapshot,
