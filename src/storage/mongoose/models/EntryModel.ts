@@ -34,7 +34,7 @@ export class EntryModel implements IModel<EntryDocument> {
         this.obj = entry.obj;
     }
 
-    private calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string }, timestamp: string, objId: string } {
+    calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string }, timestamp: string, objId: string } {
         let objectId: string = objId ? objId : _.get<string>(entry.obj, entry.entity.idPath);
         return {
             creator: {

@@ -23,3 +23,4 @@ export * from './utils/SnapshotTest';
 export * from './storage/mongoose/MongooseStorageTest';
 export * from './storage/mongoose/models/DiffSchemaTest';
 export * from './storage/mongoose/models/SnapshotSchemaTest';
+export * from './storage/mongoose/models/EntryModelTest';
