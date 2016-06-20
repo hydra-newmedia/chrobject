@@ -8,7 +8,7 @@
     "timeline"
   ],
   "author": "Christian Hotz <hotz@hydra-newmedia.com> ",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/hydra-newmedia/chrobject.git"
@@ -28,9 +28,18 @@
     "pretest": "tsc && rm -rf testDist/ && node_modules/typescript/bin/tsc --rootDir test --outDir testDist test/**/*.ts typings/index.d.ts",
     "test": "node_modules/mocha/bin/mocha testDist/* -R nyan --recursive"
   },
-  "dependencies": {},
+  "dependencies": {
+    "be-utils": "^1.0.0",
+    "lodash": "^4.13.1",
+    "mongoose": "^4.5.1",
+    "mongoose-repo": "^1.0.1",
+    "object-hash": "^1.1.2"
+  },
   "devDependencies": {
+    "expect.js": "^0.3.1",
+    "mocha": "^2.5.3",
+    "sinon": "^1.17.4",
     "typescript": "^1.8.10",
-    "typings": "^1.0.4"
+    "typings": "^1.2.0"
   }
 }
