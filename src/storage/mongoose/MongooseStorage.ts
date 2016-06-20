@@ -9,7 +9,6 @@
 /**
  *  Imports
  */
-import * as _ from 'lodash';
 import { Repository } from 'mongoose-repo';
 import { LoggerConfig } from 'be-utils';
 import { StorageStrategy } from '../StorageStrategy';
@@ -71,8 +70,7 @@ export class MongooseStorage implements StorageStrategy {
     }
 
     findLatestSnapshotBefore(id: string, timestamp: Date, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
-        let searchCondition = {};
-        _.set(searchCondition, entity.idPath, id);
+        let searchCondition = { 'masterdata.objId': id };
         SnapshotCollection.findOne(searchCondition).sort({ 'metadata.timestamp': -1 })
             .exec((err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
@@ -86,8 +84,7 @@ export class MongooseStorage implements StorageStrategy {
     }
 
     findLatestDiffBefore(id: string, timestamp: Date, entity: Entity, callback: (err: Error, diff?: Diff) => void) {
-        let searchCondition = {};
-        _.set(searchCondition, entity.idPath, id);
+        let searchCondition = { 'masterdata.objId': id };
         DiffCollection.findOne(searchCondition).sort({ 'metadata.timestamp': -1 })
             .exec((err: any, model?: DiffDocument) => {
                 if (err || !model) {

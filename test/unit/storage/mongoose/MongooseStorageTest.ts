@@ -167,6 +167,33 @@ describe('The MongooseStorage\'s', () => {
             });
         });
     });
+    describe('upsertSnapshot method', () => {
+        it('should call snapshot mongoose repo\'s updateByCondition method with correct condition and model', (done) => {
+            mongooseStorage.upsertSnapshot(goodSnap, () => {
+                expect(snapUpdate.calledOnce).to.be.ok();
+                expect(snapUpdate.getCall(0).args[0]).to.eql({ 'metadata.objId': goodSnap.objId });
+                expect(snapUpdate.getCall(0).args[1]).to.eql(new SnapshotModel(goodSnap));
+                done();
+            });
+        });
+        it('should yield error if not successful', (done) => {
+            mongooseStorage.upsertSnapshot(badSnap, (err: Error, snapshot: Snapshot) => {
+                expect(err).to.be.ok();
+                expect(err instanceof Error).to.be.ok();
+                expect(err.message).to.be('snapshot repo updateByCondition error');
+                expect(snapshot).not.to.be.ok();
+                done();
+            });
+        });
+        it('should yield snapshot with id on success', (done) => {
+            mongooseStorage.upsertSnapshot(goodSnap, (err: Error, snapshot: Snapshot) => {
+                expect(err).not.to.be.ok();
+                expect(snapshot).to.be.ok();
+                expect(snapshot).to.eql(goodSnap.clone().setId('123456789012345678901234'));
+                done();
+            });
+        });
+    });
     describe('insertDiff diff', () => {
         it('should call snapshot mongoose repo\'s insert method with correct model', (done) => {
             mongooseStorage.insertDiff(goodDiff, () => {
