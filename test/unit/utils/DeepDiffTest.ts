@@ -11,7 +11,8 @@
  */
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import { DeepDiff, ArrayDiff } from '../../../lib';
+import { DeepDiff } from '../../../lib/utils/DeepDiff';
+import { ArrayDiff } from '../../../lib/utils/ArrayDiff';
 
 let expect = require('expect.js');
 
