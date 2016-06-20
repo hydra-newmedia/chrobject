@@ -34,7 +34,8 @@ describe('The DiffSchema\'s', () => {
                         source: String
                     },
                     timestamp: Date,
-                    objId: String
+                    objId: String,
+                    entity: String
                 },
                 obj: []
             })));

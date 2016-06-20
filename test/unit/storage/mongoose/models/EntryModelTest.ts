@@ -83,7 +83,8 @@ describe('The EntryModel\'s', () => {
                     source: entry.creator.source
                 },
                 timestamp: entry.timestamp.toISOString(),
-                objId: 'aaaa'
+                objId: 'aaaa',
+                entity: entry.entity.name
             });
         });
         it('should calc objId from object if not provided via parameters', () => {
@@ -96,7 +97,8 @@ describe('The EntryModel\'s', () => {
                     source: entry.creator.source
                 },
                 timestamp: entry.timestamp.toISOString(),
-                objId: 'MYID'
+                objId: 'MYID',
+                entity: entry.entity.name
             });
         });
     });

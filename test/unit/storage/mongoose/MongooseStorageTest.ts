@@ -171,7 +171,7 @@ describe('The MongooseStorage\'s', () => {
         it('should call snapshot mongoose repo\'s updateByCondition method with correct condition and model', (done) => {
             mongooseStorage.upsertSnapshot(goodSnap, () => {
                 expect(snapUpdate.calledOnce).to.be.ok();
-                expect(snapUpdate.getCall(0).args[0]).to.eql({ 'metadata.objId': goodSnap.objId });
+                expect(snapUpdate.getCall(0).args[0]).to.eql({ 'metadata.entity': goodSnap.entity.name, 'metadata.objId': goodSnap.objId });
                 expect(snapUpdate.getCall(0).args[1]).to.eql(new SnapshotModel(goodSnap));
                 done();
             });

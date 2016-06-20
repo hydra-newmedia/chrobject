@@ -46,7 +46,7 @@ export class MongooseStorage implements StorageStrategy {
     }
 
     upsertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void) {
-        let updateCondition = { 'metadata.objId': snapshot.objId };
+        let updateCondition = { 'metadata.entity': snapshot.entity.name, 'metadata.objId': snapshot.objId };
         this.snapshotRepository.updateByCondition(updateCondition, new SnapshotModel(snapshot),
             (err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
@@ -70,7 +70,7 @@ export class MongooseStorage implements StorageStrategy {
     }
 
     findLatestSnapshotBefore(id: string, timestamp: Date, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
-        let searchCondition = { 'masterdata.objId': id };
+        let searchCondition = { 'metadata.entity': entity.name, 'metadata.objId': id };
         SnapshotCollection.findOne(searchCondition).sort({ 'metadata.timestamp': -1 })
             .exec((err: any, model?: SnapshotDocument) => {
                 if (err || !model) {
@@ -84,7 +84,7 @@ export class MongooseStorage implements StorageStrategy {
     }
 
     findLatestDiffBefore(id: string, timestamp: Date, entity: Entity, callback: (err: Error, diff?: Diff) => void) {
-        let searchCondition = { 'masterdata.objId': id };
+        let searchCondition = { 'metadata.entity': entity.name, 'metadata.objId': id };
         DiffCollection.findOne(searchCondition).sort({ 'metadata.timestamp': -1 })
             .exec((err: any, model?: DiffDocument) => {
                 if (err || !model) {

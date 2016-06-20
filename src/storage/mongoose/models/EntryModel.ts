@@ -11,9 +11,9 @@
  */
 import * as _ from 'lodash';
 import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { IModel } from 'mongoose-repo';
 import { Entry } from '../../../utils/Entry';
-import { Types } from 'mongoose';
 import { IDeepDiff } from '../../../utils/IDeepDiff';
 
 export class EntryModel implements IModel<EntryDocument> {
@@ -25,7 +25,8 @@ export class EntryModel implements IModel<EntryDocument> {
             source: string
         },
         timestamp: string,
-        objId: string
+        objId: string,
+        entity: string
     };
     obj: Object | IDeepDiff[];
 
@@ -34,7 +35,8 @@ export class EntryModel implements IModel<EntryDocument> {
         this.obj = entry.obj;
     }
 
-    calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string }, timestamp: string, objId: string } {
+    calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string },
+        timestamp: string, objId: string, entity: string } {
         let objectId: string = objId ? objId : _.get<string>(entry.obj, entry.entity.idPath);
         return {
             creator: {
@@ -42,7 +44,8 @@ export class EntryModel implements IModel<EntryDocument> {
                 source: entry.creator.source
             },
             timestamp: entry.timestamp.toISOString(),
-            objId: objectId
+            objId: objectId,
+            entity: entry.entity.name
         };
     }
 }

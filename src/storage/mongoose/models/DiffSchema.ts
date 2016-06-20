@@ -26,7 +26,8 @@ export class DiffSchema implements ISchema {
                     source: String
                 },
                 timestamp: Date,
-                objId: String
+                objId: String,
+                entity: String
             },
             obj: []
         });
