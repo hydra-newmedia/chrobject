@@ -365,11 +365,13 @@ describe('The EntryAppService\'s', () => {
             let result = eas.deepDiff({ a: { b: 'asdf' } }, {
                 a: {
                     b: 'asdf',
-                    c: { d: 'ad' }
+                    c: { d: 'ad' },
+                    arr: 'asdfa'.split('')
                 }
             });
             expect(result).to.eql([
-                new DeepDiff('created', 'a.c', null, { d: 'ad' })
+                new DeepDiff('created', 'a.c', null, { d: 'ad' }),
+                new DeepDiff('created', 'a.arr', null, 'asdfa'.split(''))
             ]);
         });
         it('should detect edited properties', () => {
@@ -388,11 +390,13 @@ describe('The EntryAppService\'s', () => {
             let result = eas.deepDiff({
                 a: {
                     b: 'asdf',
-                    c: 1
+                    c: 1,
+                    arr: 'asdf'.split('')
                 }
-            }, { a: { b: 'asdf', } });
+            }, { a: { b: 'asdf' } });
             expect(result).to.eql([
-                new DeepDiff('deleted', 'a.c', 1, null)
+                new DeepDiff('deleted', 'a.c', 1, null),
+                new DeepDiff('deleted', 'a.arr', 'asdf'.split(''), null)
             ]);
         });
         it('should detect deleted object properties', () => {
