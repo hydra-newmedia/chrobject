@@ -9,7 +9,6 @@
 /**
  *  Imports
  */
-import * as _ from 'lodash';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import { IModel } from 'mongoose-repo';
@@ -30,21 +29,19 @@ export class EntryModel implements IModel<EntryDocument> {
     };
     obj: Object | IDeepDiff[];
 
-    constructor(entry: Entry, objId?: string) {
-        this.metadata = this.calcMetadata(entry, objId);
+    constructor(entry: Entry) {
+        this.metadata = this.calcMetadata(entry);
         this.obj = entry.obj;
     }
 
-    calcMetadata(entry: Entry, objId?: string): { creator: { user: string, source: string },
-        timestamp: string, objId: string, entity: string } {
-        let objectId: string = objId ? objId : _.get<string>(entry.obj, entry.entity.idPath);
+    calcMetadata(entry: Entry): { creator: { user: string, source: string }, timestamp: string, objId: string, entity: string } {
         return {
             creator: {
                 user: entry.creator.user,
                 source: entry.creator.source
             },
             timestamp: entry.timestamp.toISOString(),
-            objId: objectId,
+            objId: entry.objId,
             entity: entry.entity.name
         };
     }
