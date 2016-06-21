@@ -36,14 +36,14 @@ describe('The EntryModel\'s', () => {
     describe('constructor', () => {
         let calcMetadata: sinon.SinonStub;
         before('mock calcMetadata method', () => {
-            calcMetadata = sinon.stub(EntryModel.prototype, 'calcMetadata', (entry: Entry, objId: string) => {
+            calcMetadata = sinon.stub(EntryModel.prototype, 'calcMetadata', (entry: Entry) => {
                     return {
                         creator: {
                             user: entry.creator.user,
                             source: entry.creator.source
                         },
                         timestamp: entry.timestamp.toISOString(),
-                        objId: objId
+                        objId: entry.objId
                     };
                 }
             );
@@ -56,25 +56,25 @@ describe('The EntryModel\'s', () => {
         });
 
         it('should instantiate object properly', () => {
-            let entryModel: EntryModel = new EntryModel(entry, 'asdf');
+            let entryModel: EntryModel = new EntryModel(entry);
             expect(entryModel).to.be.ok();
             expect(entryModel).to.be.an('object');
             expect(entryModel instanceof EntryModel).to.be.ok();
         });
         it('should set members properly and call calcMetadata', () => {
-            let entryModel: EntryModel = new EntryModel(entry, 'asdf');
+            let entryModel: EntryModel = new EntryModel(entry);
             expect(calcMetadata.calledOnce).to.be.ok();
             expect(entryModel.metadata).to.be.ok();
-            expect(entryModel.metadata).to.eql(calcMetadata(entry, 'asdf'));
+            expect(entryModel.metadata).to.eql(calcMetadata(entry));
             expect(entryModel.obj).to.be.ok();
             expect(entryModel.obj).to.eql(entry.obj);
         });
     });
 
     describe('calcMetadata method', () => {
-        let entryModel: EntryModel = new EntryModel(entry, 'asdf');
+        let entryModel: EntryModel = new EntryModel(entry);
         it('should return metadata object', () => {
-            let result = entryModel.calcMetadata(entry, 'aaaa');
+            let result = entryModel.calcMetadata(entry);
             expect(result).to.be.ok();
             expect(result).to.be.an('object');
             expect(result).to.eql({
@@ -83,7 +83,7 @@ describe('The EntryModel\'s', () => {
                     source: entry.creator.source
                 },
                 timestamp: entry.timestamp.toISOString(),
-                objId: 'aaaa',
+                objId: entry.objId,
                 entity: entry.entity.name
             });
         });
@@ -97,7 +97,7 @@ describe('The EntryModel\'s', () => {
                     source: entry.creator.source
                 },
                 timestamp: entry.timestamp.toISOString(),
-                objId: 'MYID',
+                objId: '123456789012345678901234',
                 entity: entry.entity.name
             });
         });
