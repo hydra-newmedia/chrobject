@@ -10,6 +10,7 @@
  *  Imports
  */
 import * as mongoose from 'mongoose';
+import * as _ from 'lodash';
 import { IModel } from 'mongoose-repo';
 import { DiffSchema } from './DiffSchema';
 import { Diff } from '../../../utils/Diff';
@@ -19,6 +20,9 @@ import { Model } from 'mongoose';
 export class DiffModel extends EntryModel implements IModel<DiffDocument> {
     constructor(diff: Diff) {
         super(diff);
+        if (diff.linkId) {
+            _.set(this.metadata, 'linkId', diff.linkId);
+        }
     }
 }
 
