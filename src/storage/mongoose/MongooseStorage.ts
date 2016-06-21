@@ -9,6 +9,7 @@
 /**
  *  Imports
  */
+import * as mongoose from 'mongoose';
 import { Repository } from 'mongoose-repo';
 import { LoggerConfig } from 'be-utils';
 import { StorageStrategy } from '../StorageStrategy';
@@ -30,7 +31,10 @@ export class MongooseStorage implements StorageStrategy {
     snapshotRepository: Repository<SnapshotDocument>;
     diffRepository: Repository<DiffDocument>;
 
-    constructor(loggerOrCfg: LoggerInstance | LoggerConfig) {
+    constructor(loggerOrCfg: LoggerInstance | LoggerConfig, dbConnectionString?: string, dbOptions?: mongoose.ConnectionOptions) {
+        if (!mongoose.connection.readyState && dbConnectionString) {
+            mongoose.connect(dbConnectionString, dbOptions ? dbOptions : null);
+        }
         this.snapshotRepository = new Repository<SnapshotDocument>(SnapshotCollection, loggerOrCfg);
         this.diffRepository = new Repository<DiffDocument>(DiffCollection, loggerOrCfg);
     }
