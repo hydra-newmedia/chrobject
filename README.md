@@ -48,7 +48,7 @@ var config = chrobject.Configuration.SNAP_AND_DIFF;
 var creator = new chrobject.Creator('username', 'sourceapp');
 var history = new chrobject.Chrobject(entity, config, mongooseStorage);
 
-// save a snapshot and diff an entry
+// save a snapshot + diff entry
 history.saveEntry({ a: { id: 'adsf' }, data: { test: 'val' } }, creator, new Date(), function (err, result) {
     console.log('error:', err);
     console.log('result:', result);
@@ -82,7 +82,7 @@ Currently implemented Strategies:
 ### [Creator](https://github.com/hydra-newmedia/chrobject/blob/develop/src/utils/Creator.ts)
 
 Each time you save an entry (snap, diff or snap + diff) you can assign a creator to the change to keep track of who is changing what.
-The consists of a **user** and a **sourceapp** to clarify through which application the user made the change. 
+The creator consists of a **user** and a **sourceapp** to clarify through which application the user made the change. 
 
 [npm-url]: https://npmjs.org/package/chrobject
 [download-url]: https://npmjs.org/package/chrobject
