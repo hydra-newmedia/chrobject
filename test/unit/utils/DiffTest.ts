@@ -92,6 +92,17 @@ describe('The Diff\'s', () => {
         });
     });
 
+    describe('isEmpty method', () => {
+        it('should return false if diff-array is not empty', () => {
+            let diff: Diff = new Diff(deepDiffs, '007', entity, creator, timestamp);
+            expect(diff.isEmpty()).not.to.be.ok();
+        });
+        it('should return true if diff-array is empty', () => {
+            let diff: Diff = new Diff([], '007', entity, creator, timestamp);
+            expect(diff.isEmpty()).to.be.ok();
+        });
+    });
+
     describe('setId method', () => {
         it('should set id properly', () => {
             let diff: Diff = new Diff(deepDiffs, '007', entity, creator, timestamp);

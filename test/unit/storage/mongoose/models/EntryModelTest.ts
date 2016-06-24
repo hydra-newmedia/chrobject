@@ -25,6 +25,9 @@ describe('The EntryModel\'s', () => {
         obj: { a: { identificator: 'MYID' } },
         objId: '123456789012345678901234',
         timestamp: new Date('Dec 12 2010'),
+        isEmpty: (): boolean => {
+            return false;
+        },
         setId: (id: string): Entry => {
             this.id = id;
             return this;

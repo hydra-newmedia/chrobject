@@ -56,6 +56,19 @@ describe('The Snapshot\'s', () => {
         });
     });
 
+    describe('isEmpty method', () => {
+        it('should return false if diff-array is not empty', () => {
+            let snap: Snapshot = new Snapshot(testObj, entity, creator, timestamp);
+            expect(snap.isEmpty()).not.to.be.ok();
+        });
+        it('should return true if diff-array is empty', () => {
+            let snap: Snapshot = new Snapshot({}, entity, creator, timestamp);
+            expect(snap.isEmpty()).to.be.ok();
+            snap = new Snapshot(new Object(), entity, creator, timestamp);
+            expect(snap.isEmpty()).to.be.ok();
+        });
+    });
+
     describe('setId method', () => {
         it('should set id properly', () => {
             let snap: Snapshot = new Snapshot(testObj, entity, creator, timestamp);
