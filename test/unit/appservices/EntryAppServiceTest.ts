@@ -515,6 +515,12 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('array', 'a.arr', ['a', 'b', 'c', 'd', 'e'], ['a', 'c', 'f', 'e', 'x'])
             ]);
         });
+        it('should notice array order changes', () => {
+            let result = eas.deepDiff({ a: { arr: ['a', 'b', 'c', 'd', 'e'] } }, { a: { arr: ['b', 'a', 'c', 'd', 'e'] } });
+            expect(result).to.eql([
+                new DeepDiff('array', 'a.arr', ['a', 'b', 'c', 'd', 'e'], ['b', 'a', 'c', 'd', 'e'])
+            ]);
+        });
         it('should detect all in combination', () => {
             let result = eas.deepDiff(storage.testSnapObj, storage.testSnapObj2);
             expect(result).to.eql(storage.testDiffObj);
