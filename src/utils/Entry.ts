@@ -20,6 +20,8 @@ export interface Entry {
     objId: string;
     timestamp: Date;
 
+    isEmpty(): boolean;
+    
     setId(id: string): Entry;
 
     clone(): Entry;
