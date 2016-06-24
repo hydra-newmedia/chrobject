@@ -33,6 +33,10 @@ export class Snapshot implements Entry {
         }
     }
 
+    isEmpty(): boolean {
+        return _.isEmpty(this.obj);
+    }
+
     setId(id: string): Snapshot {
         this.id = id;
         return this;

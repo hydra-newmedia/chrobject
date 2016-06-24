@@ -37,6 +37,10 @@ export class Diff implements Entry {
         }
     }
 
+    isEmpty(): boolean {
+        return this.obj.length === 0;
+    }
+
     setId(id: string): Diff {
         this.id = id;
         return this;

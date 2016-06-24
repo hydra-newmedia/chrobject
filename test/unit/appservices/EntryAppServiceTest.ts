@@ -41,7 +41,7 @@ describe('The EntryAppService\'s', () => {
             insertDiff: sinon.SinonSpy,
             findLatestSnapshotBefore: sinon.SinonSpy,
             findLatestDiffBefore: sinon.SinonSpy,
-            diff: sinon.SinonSpy;
+            diff: sinon.SinonStub;
         let searchTimestamp: Date = new Date(200000),
             findTimestamp: Date = storage.oneMinuteBefore(searchTimestamp);
 
@@ -51,10 +51,6 @@ describe('The EntryAppService\'s', () => {
             insertDiff = sinon.spy(eas.storage, 'insertDiff');
             findLatestSnapshotBefore = sinon.spy(eas.storage, 'findLatestSnapshotBefore');
             findLatestDiffBefore = sinon.spy(eas.storage, 'findLatestDiffBefore');
-            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
-                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
-                    entity, storage.creator, findTimestamp);
-            });
         });
         beforeEach('reset storage mock', () => {
             insertSnapshot.reset();
@@ -62,7 +58,13 @@ describe('The EntryAppService\'s', () => {
             insertDiff.reset();
             findLatestSnapshotBefore.reset();
             findLatestDiffBefore.reset();
-            diff.reset();
+            if (diff) {
+                diff.restore();
+            }
+            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
+                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                    entity, storage.creator, findTimestamp);
+            });
         });
         after('restore storage mock', () => {
             insertSnapshot.restore();
@@ -89,7 +91,9 @@ describe('The EntryAppService\'s', () => {
                 expect(err).not.to.be.ok();
                 expect(upsertSnapshot.called).not.to.be.ok();
                 expect(insertSnapshot.calledOnce).to.be.ok();
-                expect(insertSnapshot.getCall(0).args[0]).to.eql(new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp));
+                expect(insertSnapshot.getCall(0).args[0]).to.eql(
+                    new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp)
+                );
                 done();
             });
         });
@@ -102,8 +106,22 @@ describe('The EntryAppService\'s', () => {
                 expect(call.args[1] instanceof Snapshot).to.be.ok();
                 let oldSnap: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, findTimestamp, '0100000000');
                 expect(call.args[0]).to.eql(oldSnap);
-                let newSnap: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp, '0011223344');
+                let newSnap: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp);
                 expect(call.args[1]).to.eql(newSnap);
+                done();
+            });
+        });
+        it('should not insert snapshot nor diff if snaps don\'t differ', (done) => {
+            diff.restore();
+            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
+                return new Diff([], _.get<string>(storage.testSnapObj, entity.idPath), entity, storage.creator, findTimestamp);
+            });
+            eas.saveSnapshotAndDiff(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
+                expect(err).not.to.be.ok();
+                expect(diff.calledOnce).to.be.ok();
+                expect(insertDiff.called).not.to.be.ok();
+                expect(insertSnapshot.called).not.to.be.ok();
+                expect(upsertSnapshot.called).not.to.be.ok();
                 done();
             });
         });
@@ -129,7 +147,7 @@ describe('The EntryAppService\'s', () => {
                     expect(diff.getCall(0).args[0]).to.eql(
                         (new Snapshot({}, entity, storage.creator, searchTimestamp)).setObjId('noSnapBefore')
                     );
-                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp, '0011223344'));
+                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp));
                     done();
                 }
             );
@@ -152,31 +170,98 @@ describe('The EntryAppService\'s', () => {
 
     describe('saveSnapshot method', () => {
         let insertSnapshot: sinon.SinonSpy,
-            upsertSnapshot: sinon.SinonSpy;
-        let searchTimestamp: Date = new Date(200000);
+            upsertSnapshot: sinon.SinonSpy,
+            findLatestSnapshotBefore: sinon.SinonSpy,
+            diff: sinon.SinonStub;
+        let searchTimestamp: Date = new Date(200000),
+            findTimestamp: Date = storage.oneMinuteBefore(searchTimestamp);
 
         before('mock storage', () => {
             insertSnapshot = sinon.spy(eas.storage, 'insertSnapshot');
             upsertSnapshot = sinon.spy(eas.storage, 'upsertSnapshot');
+            findLatestSnapshotBefore = sinon.spy(eas.storage, 'findLatestSnapshotBefore');
         });
         beforeEach('reset storage mock', () => {
             insertSnapshot.reset();
             upsertSnapshot.reset();
+            findLatestSnapshotBefore.reset();
+            if (diff) {
+                diff.restore();
+            }
+            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
+                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                    entity, storage.creator, findTimestamp);
+            });
         });
         after('restore storage mock', () => {
             insertSnapshot.restore();
             upsertSnapshot.restore();
+            findLatestSnapshotBefore.restore();
+            diff.restore();
         });
 
+        it('should search for latest snapshot of correct id', (done) => {
+            eas.saveSnapshot(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
+                expect(err).not.to.be.ok();
+                expect(findLatestSnapshotBefore.calledOnce).to.be.ok();
+                let call: sinon.SinonSpyCall = findLatestSnapshotBefore.getCall(0);
+                expect(call.args[0]).to.eql(_.get<string>(storage.testSnapObj, entity.idPath));
+                expect(call.args[1]).to.eql(searchTimestamp);
+                expect(call.args[2]).to.eql(entity);
+                done();
+            });
+        });
         it('should insert correctly created Snapshot', (done) => {
-            let insertedSnapshot: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp);
             eas.saveSnapshot(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
                 expect(err).not.to.be.ok();
                 expect(upsertSnapshot.called).not.to.be.ok();
                 expect(insertSnapshot.calledOnce).to.be.ok();
-                expect(insertSnapshot.getCall(0).args[0]).to.eql(insertedSnapshot);
+                expect(insertSnapshot.getCall(0).args[0]).to.eql(
+                    new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp)
+                );
                 done();
             });
+        });
+        it('should diff correct Snapshots', (done) => {
+            eas.saveSnapshot(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
+                expect(err).not.to.be.ok();
+                expect(diff.calledOnce).to.be.ok();
+                let call: sinon.SinonSpyCall = diff.getCall(0);
+                expect(call.args[0] instanceof Snapshot).to.be.ok();
+                expect(call.args[1] instanceof Snapshot).to.be.ok();
+                let oldSnap: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, findTimestamp, '0100000000');
+                expect(call.args[0]).to.eql(oldSnap);
+                let newSnap: Snapshot = new Snapshot(storage.testSnapObj, entity, storage.creator, searchTimestamp);
+                expect(call.args[1]).to.eql(newSnap);
+                done();
+            });
+        });
+        it('should not insert snapshot if snaps don\'t differ', (done) => {
+            diff.restore();
+            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
+                return new Diff([], _.get<string>(storage.testSnapObj, entity.idPath), entity, storage.creator, findTimestamp);
+            });
+            eas.saveSnapshot(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
+                expect(err).not.to.be.ok();
+                expect(diff.calledOnce).to.be.ok();
+                expect(insertSnapshot.called).not.to.be.ok();
+                expect(upsertSnapshot.called).not.to.be.ok();
+                done();
+            });
+        });
+        it('should create diff to {}-object if no older snap of that object', (done) => {
+            let testObj: Object = _.cloneDeep(storage.testSnapObj);
+            _.set(testObj, 'my.identificator', 'noSnapBefore');
+            eas.saveSnapshot(testObj, storage.creator, searchTimestamp, (err: Error) => {
+                    expect(err).not.to.be.ok();
+                    expect(diff.calledOnce).to.be.ok();
+                    expect(diff.getCall(0).args[0]).to.eql(
+                        (new Snapshot({}, entity, storage.creator, searchTimestamp)).setObjId('noSnapBefore')
+                    );
+                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp));
+                    done();
+                }
+            );
         });
         it('should return snapshot object', (done) => {
             eas.saveSnapshot(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error, result: Snapshot) => {
@@ -203,10 +288,6 @@ describe('The EntryAppService\'s', () => {
             insertDiff = sinon.spy(eas.storage, 'insertDiff');
             findLatestSnapshotBefore = sinon.spy(eas.storage, 'findLatestSnapshotBefore');
             findLatestDiffBefore = sinon.spy(eas.storage, 'findLatestDiffBefore');
-            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
-                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
-                    entity, storage.creator, findTimestamp);
-            });
         });
         beforeEach('reset storage mock', () => {
             insertSnapshot.reset();
@@ -214,7 +295,13 @@ describe('The EntryAppService\'s', () => {
             insertDiff.reset();
             findLatestSnapshotBefore.reset();
             findLatestDiffBefore.reset();
-            diff.reset();
+            if (diff) {
+                diff.restore();
+            }
+            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
+                return new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
+                    entity, storage.creator, findTimestamp);
+            });
         });
         after('restore storage mock', () => {
             insertSnapshot.restore();
@@ -261,6 +348,18 @@ describe('The EntryAppService\'s', () => {
                 done();
             });
         });
+        it('should not insert diff if snaps don\'t differ', (done) => {
+            diff.restore();
+            diff = sinon.stub(eas, 'diff', (snapOne: Snapshot, snapTwo: Snapshot): Diff => {
+                return new Diff([], _.get<string>(storage.testSnapObj, entity.idPath), entity, storage.creator, findTimestamp);
+            });
+            eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp, (err: Error) => {
+                expect(err).not.to.be.ok();
+                expect(diff.calledOnce).to.be.ok();
+                expect(insertDiff.called).not.to.be.ok();
+                done();
+            });
+        });
         it('should insert correctly created Diff without linkId', (done) => {
             eas.saveDiff(storage.testSnapObj, storage.creator, searchTimestamp, () => {
                 let insertedDiff: Diff = new Diff(storage.testDiffObj, _.get<string>(storage.testSnapObj, entity.idPath),
@@ -281,7 +380,7 @@ describe('The EntryAppService\'s', () => {
                     expect(diff.getCall(0).args[0]).to.eql(
                         (new Snapshot({}, entity, storage.creator, searchTimestamp)).setObjId('noSnapBefore')
                     );
-                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp, '0123456789'));
+                    expect(diff.getCall(0).args[1]).to.eql(new Snapshot(testObj, entity, storage.creator, searchTimestamp));
                     done();
                 }
             );
