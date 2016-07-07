@@ -36,8 +36,8 @@ let goodSnap: Snapshot = new Snapshot({
         good: 'snap',
         identificator: 'good'
     }
-}, entity, creator, timestamp);
-let badSnap: Snapshot = new Snapshot({ a: { identificator: 'good' } }, entity, creator, timestamp);
+}, entity, creator, timestamp, 'good');
+let badSnap: Snapshot = new Snapshot({ a: { identificator: 'bad' } }, entity, creator, timestamp, 'bad');
 let goodDiff: Diff = new Diff([new DeepDiff('created', 'a.b', null, 'adsf')], 'good', entity, creator, timestamp);
 let badDiff: Diff = new Diff([], 'bad', entity, creator, timestamp);
 
@@ -49,6 +49,7 @@ let SnapshotDoc = {
             user: goodSnap.creator.user,
             source: goodSnap.creator.source
         },
+        entity: 'testEntity',
         timestamp: goodSnap.timestamp.toISOString(),
         objId: goodSnap.objId
     },
@@ -83,11 +84,19 @@ describe('The MongooseStorage\'s', () => {
 
     let mongooseStorage: MongooseStorage = new MongooseStorage(config);
     let snapInsert: sinon.SinonSpy,
+        snapFindById: sinon.SinonSpy,
         snapUpdate: sinon.SinonSpy,
         diffInsert: sinon.SinonSpy;
     let snapRepoMock, diffRepoMock;
     before('mock repositories', () => {
         snapRepoMock = <any> sinon.mock({
+            findById: (id: string, callback: (err: any, model?: SnapshotDocument) => void) => {
+                if (id === goodSnap.id) {
+                    callback(null, <SnapshotDocument> SnapshotDoc);
+                } else {
+                    callback(new Error('snapshot repo findById error'));
+                }
+            },
             insert: (model: SnapshotModel, callback: (err: any, model?: SnapshotDocument) => void) => {
                 if (hash(model.obj) === hash(goodSnap.obj)) {
                     callback(null, <SnapshotDocument> SnapshotDoc);
@@ -104,6 +113,7 @@ describe('The MongooseStorage\'s', () => {
             }
         });
         mongooseStorage.snapshotRepository = snapRepoMock.object;
+        snapFindById = sinon.spy(mongooseStorage.snapshotRepository, 'findById');
         snapInsert = sinon.spy(mongooseStorage.snapshotRepository, 'insert');
         snapUpdate = sinon.spy(mongooseStorage.snapshotRepository, 'updateByCondition');
 
@@ -120,11 +130,13 @@ describe('The MongooseStorage\'s', () => {
         diffInsert = sinon.spy(mongooseStorage.diffRepository, 'insert');
     });
     beforeEach('reset repository insert/update spies', () => {
+        snapFindById.reset();
         snapInsert.reset();
         snapUpdate.reset();
         diffInsert.reset();
     });
     after('restore repository mocks and spies', () => {
+        snapFindById.restore();
         snapInsert.restore();
         snapUpdate.restore();
         diffInsert.restore();
@@ -139,6 +151,34 @@ describe('The MongooseStorage\'s', () => {
             expect(storage.snapshotRepository instanceof Repository).to.be.ok();
             expect(storage.diffRepository).to.be.ok();
             expect(storage.diffRepository instanceof Repository).to.be.ok();
+        });
+    });
+    describe('findSnapshotById method', () => {
+        it('should call snapshot mongoose repo\'s findById method with the provided id', (done) => {
+            mongooseStorage.findSnapshotById(goodSnap.id, () => {
+                expect(snapFindById.calledOnce).to.be.ok();
+                expect(snapFindById.getCall(0).args[0]).to.be(goodSnap.id);
+                done();
+            });
+        });
+        it('should yield error if not successful', (done) => {
+            mongooseStorage.findSnapshotById(badSnap.id, (err: Error, snapshot?: Snapshot) => {
+                expect(err).to.be.ok();
+                expect(err instanceof Error).to.be.ok();
+                expect(err.message).to.be('snapshot repo findById error');
+                expect(snapshot).not.to.be.ok();
+                done();
+            });
+        });
+        it('should yield snapshot on success', (done) => {
+            mongooseStorage.findSnapshotById(goodSnap.id, (err: Error, snapshot?: Snapshot) => {
+                expect(err).not.to.be.ok();
+                expect(snapshot).to.be.ok();
+                let expectedSnap: Snapshot = goodSnap.clone().setId('123456789012345678901234').setObjId('good');
+                expectedSnap.entity = new Entity('testEntity', undefined);
+                expect(snapshot).to.eql(expectedSnap);
+                done();
+            });
         });
     });
     describe('insertSnapshot method', () => {
