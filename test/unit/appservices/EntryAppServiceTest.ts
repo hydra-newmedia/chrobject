@@ -35,6 +35,28 @@ describe('The EntryAppService\'s', () => {
         });
     });
 
+    describe('getSnapshotById method', () => {
+        let findSnapshotById: sinon.SinonSpy;
+
+        before('mock storage', () => {
+            findSnapshotById = sinon.spy(eas.storage, 'findSnapshotById');
+        });
+        beforeEach('reset storage mock', () => {
+            findSnapshotById.reset();
+        });
+        after('restore storage mock', () => {
+            findSnapshotById.restore();
+        });
+
+        it('should call findById method of repo with correct id', (done) => {
+            eas.getSnapshotById('myVerySpecialId', () => {
+                expect(findSnapshotById.calledOnce).to.be.ok();
+                expect(findSnapshotById.getCall(0).args[0]).to.be('myVerySpecialId');
+                done();
+            });
+        });
+    });
+
     describe('saveSnapshotAndDiff method', () => {
         let insertSnapshot: sinon.SinonSpy,
             upsertSnapshot: sinon.SinonSpy,
