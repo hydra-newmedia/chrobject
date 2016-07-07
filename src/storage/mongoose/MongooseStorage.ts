@@ -10,9 +10,10 @@
  *  Imports
  */
 import * as mongoose from 'mongoose';
+import * as _ from 'lodash';
 import { Repository } from 'mongoose-repo';
 import { LoggerConfig } from 'be-utils';
-import { StorageStrategy } from '../StorageStrategy';
+import { StorageStrategy, FindDiffsCondition } from '../StorageStrategy';
 import { Snapshot } from '../../utils/Snapshot';
 import { IDeepDiff } from '../../utils/IDeepDiff';
 import { Diff } from '../../utils/Diff';
@@ -39,7 +40,35 @@ export class MongooseStorage implements StorageStrategy {
         this.diffRepository = new Repository<DiffDocument>(DiffCollection, loggerOrCfg);
     }
 
-    findSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void) {
+    findDiffsByCondition(condition: FindDiffsCondition, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
+        let query: Object = {};
+        if (condition.objIds) {
+            query[entity.idPath] = { $in: condition.objIds };
+        }
+        if (condition.timerange) {
+            let dateCompareQuery: Object = {};
+            if (condition.timerange.start) {
+                dateCompareQuery['$gte'] = condition.timerange.start;
+            }
+            if (condition.timerange.end) {
+                dateCompareQuery['$lte'] = condition.timerange.end;
+            }
+            if (!_.isEmpty(dateCompareQuery)) {
+                query['metadata.timestamp'] = dateCompareQuery;
+            }
+        }
+        if (condition.creator) {
+            if (condition.creator.user) {
+                query['metadata.creator.user'] = condition.creator.user;
+            }
+            if (condition.creator.source) {
+                query['metadata.creator.source'] = condition.creator.source;
+            }
+        }
+        console.log(query);
+    }
+
+    findSnapshotById(ids: string, callback: (err: Error, snapshot?: Snapshot) => void) {
         this.snapshotRepository.findById(id, (err: any, model?: SnapshotDocument) => {
             if (err) {
                 callback(err);
