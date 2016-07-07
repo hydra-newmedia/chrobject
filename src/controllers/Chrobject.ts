@@ -29,6 +29,10 @@ export class Chrobject {
         this.appService = new EntryAppService(entity, storage);
     }
 
+    getSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void) {
+        this.appService.getSnapshotById(id, callback);
+    }
+
     saveEntry(obj: Object, creator: Creator, timestamp?: Date,
               callback?: (err: Error, result?: { snapshot?: Snapshot, diff?: Diff }) => void) {
         if (!timestamp) {

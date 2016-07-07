@@ -39,6 +39,23 @@ export class MongooseStorage implements StorageStrategy {
         this.diffRepository = new Repository<DiffDocument>(DiffCollection, loggerOrCfg);
     }
 
+    findSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void) {
+        this.snapshotRepository.findById(id, (err: any, model?: SnapshotDocument) => {
+            if (err) {
+                callback(err);
+            } else {
+                let snap: Snapshot = new Snapshot(
+                    model.obj,
+                    new Entity(model.metadata.entity, undefined),
+                    new Creator(model.metadata.creator.user, model.metadata.creator.source),
+                    new Date(model.metadata.timestamp),
+                    model._id.toHexString()
+                );
+                callback(null, snap.setObjId(model.metadata.objId));
+            }
+        });
+    }
+
     insertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void) {
         this.snapshotRepository.insert(new SnapshotModel(snapshot), (err: any, model?: SnapshotDocument) => {
             if (err || !model) {

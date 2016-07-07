@@ -27,6 +27,10 @@ export class EntryAppService {
         this.storage = storage;
     }
 
+    getSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void) {
+        this.storage.findSnapshotById(id, callback);
+    }
+
     saveSnapshotAndDiff(obj: Object, creator: Creator, timestamp: Date,
                         callback: (err: Error, result?: { snapshot?: Snapshot, diff?: Diff }) => void) {
         let id: string = _.get<string>(obj, this.entity.idPath);

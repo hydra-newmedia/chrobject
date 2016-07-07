@@ -14,6 +14,7 @@ import { Snapshot } from '../utils/Snapshot';
 import { Diff } from '../utils/Diff';
 
 export interface StorageStrategy {
+    findSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void);
     insertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void);
     upsertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void);
     insertDiff(diff: Diff, callback: (err: Error, diff?: Diff) => void);
