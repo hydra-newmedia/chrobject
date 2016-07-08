@@ -11,7 +11,7 @@
  */
 import * as mongoose from 'mongoose';
 import * as _ from 'lodash';
-import { Repository } from 'mongoose-repo';
+import { Repository, IResultList } from 'mongoose-repo';
 import { LoggerConfig } from 'be-utils';
 import { StorageStrategy, FindDiffsCondition } from '../StorageStrategy';
 import { Snapshot } from '../../utils/Snapshot';
@@ -40,10 +40,12 @@ export class MongooseStorage implements StorageStrategy {
         this.diffRepository = new Repository<DiffDocument>(DiffCollection, loggerOrCfg);
     }
 
-    findDiffsByCondition(condition: FindDiffsCondition, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
-        let query: Object = {};
+    findDiffsByCondition(condition: FindDiffsCondition, entity: Entity, callback: (err: Error, diffs?: Diff[]) => void) {
+        let query: Object = {
+            'metadata.entity': entity.name
+        };
         if (condition.objIds) {
-            query[entity.idPath] = { $in: condition.objIds };
+            query['metadata.objId'] = { $in: condition.objIds };
         }
         if (condition.timerange) {
             let dateCompareQuery: Object = {};
@@ -65,7 +67,25 @@ export class MongooseStorage implements StorageStrategy {
                 query['metadata.creator.source'] = condition.creator.source;
             }
         }
-        console.log(query);
+        this.diffRepository.find(query, (err: any, result: IResultList<DiffDocument>) => {
+            if (err) {
+                callback(err);
+            } else {
+                let diffs: Diff[] = [];
+                for (var diff of result.items) {
+                    diffs.push(new Diff(
+                        <IDeepDiff[]> diff.obj,
+                        diff.metadata.objId,
+                        entity,
+                        new Creator(diff.metadata.creator.user, diff.metadata.creator.source),
+                        new Date(diff.metadata.timestamp),
+                        diff._id.toHexString(),
+                        diff.metadata.linkId
+                    ));
+                }
+                callback(null, diffs);
+            }
+        });
     }
 
     findSnapshotById(id: string, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
