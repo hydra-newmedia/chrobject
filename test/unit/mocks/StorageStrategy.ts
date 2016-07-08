@@ -13,6 +13,7 @@ import * as _ from 'lodash';
 import * as chrobject from '../../../lib';
 import { IDeepDiff } from '../../../lib';
 import { DeepDiff } from '../../../lib/utils/DeepDiff';
+import { Entity } from '../../../lib/utils/Entity';
 
 export class StorageStrategy implements chrobject.StorageStrategy {
     testSnapObj: Object = {
@@ -61,7 +62,7 @@ export class StorageStrategy implements chrobject.StorageStrategy {
         return new Date(timestamp.valueOf() - 60000);
     }
 
-    findSnapshotById(id: string, callback: (err: Error, snapshot?: chrobject.Snapshot) => void) {
+    findSnapshotById(id: string, entity: Entity, callback: (err: Error, snapshot?: chrobject.Snapshot) => void) {
         callback(null, this.foundSnapshot.setId(id));
     }
 
