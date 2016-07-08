@@ -13,6 +13,7 @@ import * as _ from 'lodash';
 import * as chrobject from '../../../lib';
 import { IDeepDiff } from '../../../lib';
 import { DeepDiff } from '../../../lib/utils/DeepDiff';
+import { FindDiffsCondition } from '../../../lib/storage/StorageStrategy';
 import { Entity } from '../../../lib/utils/Entity';
 
 export class StorageStrategy implements chrobject.StorageStrategy {
@@ -64,6 +65,11 @@ export class StorageStrategy implements chrobject.StorageStrategy {
 
     findSnapshotById(id: string, entity: Entity, callback: (err: Error, snapshot?: chrobject.Snapshot) => void) {
         callback(null, this.foundSnapshot.setId(id));
+    }
+
+    findDiffsByCondition(condition: FindDiffsCondition, entity: chrobject.Entity,
+                         callback: (err: Error, diffs?: chrobject.Diff[]) => void) {
+        callback(null);
     }
 
     insertSnapshot(snapshot: chrobject.Snapshot, callback: (err: Error, snapshot: chrobject.Snapshot) => void) {
