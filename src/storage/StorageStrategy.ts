@@ -15,8 +15,8 @@ import { Diff } from '../utils/Diff';
 import { Creator } from '../utils/Creator';
 
 export interface StorageStrategy {
-    findSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void);
     findDiffsByCondition(condition: FindDiffsCondition, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void)
+    findSnapshotById(id: string, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void);
     insertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void);
     upsertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void);
     insertDiff(diff: Diff, callback: (err: Error, diff?: Diff) => void);

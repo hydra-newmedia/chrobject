@@ -155,14 +155,14 @@ describe('The MongooseStorage\'s', () => {
     });
     describe('findSnapshotById method', () => {
         it('should call snapshot mongoose repo\'s findById method with the provided id', (done) => {
-            mongooseStorage.findSnapshotById(goodSnap.id, () => {
+            mongooseStorage.findSnapshotById(goodSnap.id, entity, () => {
                 expect(snapFindById.calledOnce).to.be.ok();
                 expect(snapFindById.getCall(0).args[0]).to.be(goodSnap.id);
                 done();
             });
         });
         it('should yield error if not successful', (done) => {
-            mongooseStorage.findSnapshotById(badSnap.id, (err: Error, snapshot?: Snapshot) => {
+            mongooseStorage.findSnapshotById(badSnap.id, entity, (err: Error, snapshot?: Snapshot) => {
                 expect(err).to.be.ok();
                 expect(err instanceof Error).to.be.ok();
                 expect(err.message).to.be('snapshot repo findById error');
@@ -171,11 +171,11 @@ describe('The MongooseStorage\'s', () => {
             });
         });
         it('should yield snapshot on success', (done) => {
-            mongooseStorage.findSnapshotById(goodSnap.id, (err: Error, snapshot?: Snapshot) => {
+            mongooseStorage.findSnapshotById(goodSnap.id, entity, (err: Error, snapshot?: Snapshot) => {
                 expect(err).not.to.be.ok();
                 expect(snapshot).to.be.ok();
                 let expectedSnap: Snapshot = goodSnap.clone().setId('123456789012345678901234').setObjId('good');
-                expectedSnap.entity = new Entity('testEntity', undefined);
+                expectedSnap.entity = entity;
                 expect(snapshot).to.eql(expectedSnap);
                 done();
             });

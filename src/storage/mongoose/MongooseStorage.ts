@@ -68,14 +68,14 @@ export class MongooseStorage implements StorageStrategy {
         console.log(query);
     }
 
-    findSnapshotById(ids: string, callback: (err: Error, snapshot?: Snapshot) => void) {
+    findSnapshotById(id: string, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
         this.snapshotRepository.findById(id, (err: any, model?: SnapshotDocument) => {
             if (err) {
                 callback(err);
             } else {
                 let snap: Snapshot = new Snapshot(
                     model.obj,
-                    new Entity(model.metadata.entity, undefined),
+                    entity,
                     new Creator(model.metadata.creator.user, model.metadata.creator.source),
                     new Date(model.metadata.timestamp),
                     model._id.toHexString()
