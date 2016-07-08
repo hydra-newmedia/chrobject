@@ -15,7 +15,10 @@ import { Snapshot } from '../utils/Snapshot';
 import { Configuration } from '../utils/Configuration';
 import { Creator } from '../utils/Creator';
 import { EntryAppService } from '../appservices/EntryAppService';
-import { StorageStrategy } from '../storage/StorageStrategy';
+import {
+    StorageStrategy,
+    FindDiffsCondition
+} from '../storage/StorageStrategy';
 
 export class Chrobject {
 
@@ -27,6 +30,10 @@ export class Chrobject {
         this.entity = entity;
         this.config = config;
         this.appService = new EntryAppService(entity, storage);
+    }
+
+    getDiffs(condition: FindDiffsCondition, callback: (err: Error, diffs?: Diff[]) => void) {
+        this.appService.getDiffs(condition, callback);
     }
 
     getSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void) {
