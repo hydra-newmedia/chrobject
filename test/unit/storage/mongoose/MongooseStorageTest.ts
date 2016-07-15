@@ -11,7 +11,8 @@
  */
 import * as sinon from 'sinon';
 import * as hash from 'object-hash';
-import { Repository } from 'mongoose-repo';
+import * as _ from 'lodash';
+import { Repository, ResultList } from 'mongoose-repo';
 import { Types } from 'mongoose';
 import { LoggerConfig } from 'be-utils';
 import { MongooseStorage } from '../../../../lib/storage/mongoose/MongooseStorage';
@@ -86,7 +87,8 @@ describe('The MongooseStorage\'s', () => {
     let snapInsert: sinon.SinonSpy,
         snapFindById: sinon.SinonSpy,
         snapUpdate: sinon.SinonSpy,
-        diffInsert: sinon.SinonSpy;
+        diffInsert: sinon.SinonSpy,
+        diffFindByCond: sinon.SinonSpy;
     let snapRepoMock, diffRepoMock;
     before('mock repositories', () => {
         snapRepoMock = <any> sinon.mock({
@@ -124,22 +126,35 @@ describe('The MongooseStorage\'s', () => {
                 } else {
                     callback(new Error('diff repo insert error'));
                 }
+            },
+            find: (cond: Object, callback: (err: any, models?: any) => void, limit?: number, offset?: number) => {
+                if (hash(_.get<string>(cond, 'metadata.objId.$in')) !== hash([ 'badSearch' ])) {
+                    callback(null, new ResultList([
+                        DiffDoc,
+                        DiffDoc
+                    ], 2));
+                } else {
+                    callback(new Error('diff repo find error'));
+                }
             }
         });
         mongooseStorage.diffRepository = diffRepoMock.object;
         diffInsert = sinon.spy(mongooseStorage.diffRepository, 'insert');
+        diffFindByCond = sinon.spy(mongooseStorage.diffRepository, 'find');
     });
     beforeEach('reset repository insert/update spies', () => {
         snapFindById.reset();
         snapInsert.reset();
         snapUpdate.reset();
         diffInsert.reset();
+        diffFindByCond.reset();
     });
     after('restore repository mocks and spies', () => {
         snapFindById.restore();
         snapInsert.restore();
         snapUpdate.restore();
         diffInsert.restore();
+        diffFindByCond.restore();
         snapRepoMock.restore();
         diffRepoMock.restore();
     });
@@ -180,6 +195,8 @@ describe('The MongooseStorage\'s', () => {
                 done();
             });
         });
+    });
+    describe('findDiffsByCondition method', () => {
     });
     describe('insertSnapshot method', () => {
         it('should call snapshot mongoose repo\'s insert method with correct model', (done) => {
