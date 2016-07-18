@@ -44,7 +44,7 @@ export class MongooseStorage implements StorageStrategy {
         let query: Object = {
             'metadata.entity': entity.name
         };
-        if (condition.objIds) {
+        if (condition.objIds && !_.isEmpty(condition.objIds)) {
             query['metadata.objId'] = { $in: condition.objIds };
         }
         if (condition.timerange) {
