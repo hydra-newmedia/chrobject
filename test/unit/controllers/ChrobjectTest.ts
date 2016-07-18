@@ -24,25 +24,79 @@ import * as sinon from 'sinon';
 import { StorageStrategy } from '../mocks/StorageStrategy';
 import { IDeepDiff } from '../../../lib/utils/IDeepDiff';
 import { DeepDiff } from '../../../lib/utils/DeepDiff';
+import { FindDiffsCondition } from '../../../lib/storage/StorageStrategy';
 
 let expect = require('expect.js');
 
 describe('The Chrobject\'s', () => {
 
     let chrobject: Chrobject;
+    let config: Configuration;
     let entity = new Entity('testObj', 'my.identificator');
     let storage: LibStorageStrategy = new StorageStrategy();
 
+    before('setup Chrobject instance', () => {
+        config = Configuration.SNAP_AND_DIFF;
+        chrobject = new Chrobject(entity, config, storage);
+    });
+
     describe('constructor', () => {
         it('should set members by parameters', () => {
-            let config = Configuration.SNAP_AND_DIFF;
-            chrobject = new Chrobject(entity, config, storage);
             expect(chrobject).to.be.ok();
             expect(chrobject.entity).to.be.ok();
             expect(chrobject.entity).to.eql(entity);
             expect(chrobject.config).to.eql(config);
             expect(chrobject.appService).to.be.ok();
             expect(chrobject.appService).to.eql(new EntryAppService(entity, storage));
+        });
+    });
+
+    describe('getDiffs method', () => {
+        let ASGetDiffs: sinon.SinonSpy;
+        before('setup spy', () => {
+            ASGetDiffs = sinon.spy(chrobject.appService, 'getDiffs');
+        });
+        afterEach('reset spy', () => {
+            ASGetDiffs.reset();
+        });
+        after('restore spy', () => {
+            ASGetDiffs.restore();
+        });
+        it('should call getDiffs method of app service', (done) => {
+            let creator: Creator = new Creator('username', 'sourceapp'),
+                condition: FindDiffsCondition = {
+                    objIds: ['a', 'b'],
+                    timerange: {
+                        start: new Date('2013-03-04T13:12:34.000Z'),
+                        end: new Date('2044-02-03T12:33:44.002Z')
+                    },
+                    creator: creator
+                };
+            chrobject.getDiffs(condition, () => {
+                expect(ASGetDiffs.calledOnce).to.be.ok();
+                expect(ASGetDiffs.getCall(0).args[0]).to.be(condition);
+                done();
+            });
+        });
+    });
+
+    describe('getSnapshotById method', () => {
+        let ASGetSnapById: sinon.SinonSpy;
+        before('setup spy', () => {
+            ASGetSnapById = sinon.spy(chrobject.appService, 'getSnapshotById');
+        });
+        afterEach('reset spy', () => {
+            ASGetSnapById.reset();
+        });
+        after('restore spy', () => {
+            ASGetSnapById.restore();
+        });
+        it('should call getSnapshotById method of app service', (done) => {
+            chrobject.getSnapshotById('specialId', () => {
+                expect(ASGetSnapById.calledOnce).to.be.ok();
+                expect(ASGetSnapById.getCall(0).args[0]).to.eql('specialId');
+                done();
+            });
         });
     });
 

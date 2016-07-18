@@ -11,7 +11,8 @@
  */
 import * as sinon from 'sinon';
 import * as hash from 'object-hash';
-import { Repository } from 'mongoose-repo';
+import * as _ from 'lodash';
+import { Repository, ResultList } from 'mongoose-repo';
 import { Types } from 'mongoose';
 import { LoggerConfig } from 'be-utils';
 import { MongooseStorage } from '../../../../lib/storage/mongoose/MongooseStorage';
@@ -25,6 +26,8 @@ import { Diff } from '../../../../lib/utils/Diff';
 import { Entity } from '../../../../lib/utils/Entity';
 import { Creator } from '../../../../lib/utils/Creator';
 import { DeepDiff } from '../../../../lib/utils/DeepDiff';
+import { FindDiffsCondition } from '../../../../lib/storage/StorageStrategy';
+import { IDeepDiff } from '../../../../lib/utils/IDeepDiff';
 
 let expect = require('expect.js');
 
@@ -36,8 +39,8 @@ let goodSnap: Snapshot = new Snapshot({
         good: 'snap',
         identificator: 'good'
     }
-}, entity, creator, timestamp);
-let badSnap: Snapshot = new Snapshot({ a: { identificator: 'good' } }, entity, creator, timestamp);
+}, entity, creator, timestamp, 'good');
+let badSnap: Snapshot = new Snapshot({ a: { identificator: 'bad' } }, entity, creator, timestamp, 'bad');
 let goodDiff: Diff = new Diff([new DeepDiff('created', 'a.b', null, 'adsf')], 'good', entity, creator, timestamp);
 let badDiff: Diff = new Diff([], 'bad', entity, creator, timestamp);
 
@@ -49,6 +52,7 @@ let SnapshotDoc = {
             user: goodSnap.creator.user,
             source: goodSnap.creator.source
         },
+        entity: 'testEntity',
         timestamp: goodSnap.timestamp.toISOString(),
         objId: goodSnap.objId
     },
@@ -63,7 +67,8 @@ let DiffDoc = {
             source: goodDiff.creator.source
         },
         timestamp: goodDiff.timestamp.toISOString(),
-        objId: goodDiff.objId
+        objId: goodDiff.objId,
+        linkId: SnapshotDoc._id.toHexString()
     },
     obj: []
 };
@@ -83,11 +88,20 @@ describe('The MongooseStorage\'s', () => {
 
     let mongooseStorage: MongooseStorage = new MongooseStorage(config);
     let snapInsert: sinon.SinonSpy,
+        snapFindById: sinon.SinonSpy,
         snapUpdate: sinon.SinonSpy,
-        diffInsert: sinon.SinonSpy;
+        diffInsert: sinon.SinonSpy,
+        diffFindByCond: sinon.SinonSpy;
     let snapRepoMock, diffRepoMock;
     before('mock repositories', () => {
         snapRepoMock = <any> sinon.mock({
+            findById: (id: string, callback: (err: any, model?: SnapshotDocument) => void) => {
+                if (id === goodSnap.id) {
+                    callback(null, <SnapshotDocument> SnapshotDoc);
+                } else {
+                    callback(new Error('snapshot repo findById error'));
+                }
+            },
             insert: (model: SnapshotModel, callback: (err: any, model?: SnapshotDocument) => void) => {
                 if (hash(model.obj) === hash(goodSnap.obj)) {
                     callback(null, <SnapshotDocument> SnapshotDoc);
@@ -104,6 +118,7 @@ describe('The MongooseStorage\'s', () => {
             }
         });
         mongooseStorage.snapshotRepository = snapRepoMock.object;
+        snapFindById = sinon.spy(mongooseStorage.snapshotRepository, 'findById');
         snapInsert = sinon.spy(mongooseStorage.snapshotRepository, 'insert');
         snapUpdate = sinon.spy(mongooseStorage.snapshotRepository, 'updateByCondition');
 
@@ -114,20 +129,36 @@ describe('The MongooseStorage\'s', () => {
                 } else {
                     callback(new Error('diff repo insert error'));
                 }
+            },
+            find: (cond: Object, callback: (err: any, models?: any) => void, limit?: number, offset?: number) => {
+                let $in = _.get<string[]>(cond['metadata.objId'], '$in');
+                if ($in && hash([ 'badSearch' ]) && hash($in) !== hash([ 'badSearch' ])) {
+                    callback(null, new ResultList([
+                        DiffDoc,
+                        DiffDoc
+                    ], 2));
+                } else {
+                    callback(new Error('diff repo find error'));
+                }
             }
         });
         mongooseStorage.diffRepository = diffRepoMock.object;
         diffInsert = sinon.spy(mongooseStorage.diffRepository, 'insert');
+        diffFindByCond = sinon.spy(mongooseStorage.diffRepository, 'find');
     });
     beforeEach('reset repository insert/update spies', () => {
+        snapFindById.reset();
         snapInsert.reset();
         snapUpdate.reset();
         diffInsert.reset();
+        diffFindByCond.reset();
     });
     after('restore repository mocks and spies', () => {
+        snapFindById.restore();
         snapInsert.restore();
         snapUpdate.restore();
         diffInsert.restore();
+        diffFindByCond.restore();
         snapRepoMock.restore();
         diffRepoMock.restore();
     });
@@ -139,6 +170,233 @@ describe('The MongooseStorage\'s', () => {
             expect(storage.snapshotRepository instanceof Repository).to.be.ok();
             expect(storage.diffRepository).to.be.ok();
             expect(storage.diffRepository instanceof Repository).to.be.ok();
+        });
+    });
+    describe('findSnapshotById method', () => {
+        it('should call snapshot mongoose repo\'s findById method with the provided id', (done) => {
+            mongooseStorage.findSnapshotById(goodSnap.id, entity, () => {
+                expect(snapFindById.calledOnce).to.be.ok();
+                expect(snapFindById.getCall(0).args[0]).to.be(goodSnap.id);
+                done();
+            });
+        });
+        it('should yield error if not successful', (done) => {
+            mongooseStorage.findSnapshotById(badSnap.id, entity, (err: Error, snapshot?: Snapshot) => {
+                expect(err).to.be.ok();
+                expect(err instanceof Error).to.be.ok();
+                expect(err.message).to.be('snapshot repo findById error');
+                expect(snapshot).not.to.be.ok();
+                done();
+            });
+        });
+        it('should yield snapshot on success', (done) => {
+            mongooseStorage.findSnapshotById(goodSnap.id, entity, (err: Error, snapshot?: Snapshot) => {
+                expect(err).not.to.be.ok();
+                expect(snapshot).to.be.ok();
+                let expectedSnap: Snapshot = goodSnap.clone().setId('123456789012345678901234').setObjId('good');
+                expectedSnap.entity = entity;
+                expect(snapshot).to.eql(expectedSnap);
+                done();
+            });
+        });
+    });
+    describe('findDiffsByCondition method', () => {
+        let start: Date = new Date('2013-03-04T13:12:34.000Z'),
+            end: Date = new Date('2044-02-03T12:33:44.002Z');
+        it('should create correct search for objIds', (done) => {
+            let condition: FindDiffsCondition = {
+                    objIds: [ 'a', 'b' ]
+                };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name,
+                    'metadata.objId': { $in: condition.objIds }
+                });
+                done();
+            });
+        });
+        it('should search without objIds', (done) => {
+            let condition: FindDiffsCondition = {
+                    objIds: []
+                };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name
+                });
+                done();
+            });
+        });
+        it('should create correct search object for timerange', (done) => {
+            let condition: FindDiffsCondition = {
+                timerange: {
+                    start: start,
+                    end: end
+                }
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name,
+                    'metadata.timestamp': {
+                        $gte: start,
+                        $lte: end
+                    }
+                });
+                done();
+            });
+        });
+        it('should search without timerange', (done) => {
+            let condition: FindDiffsCondition = {
+                timerange: {}
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name
+                });
+                done();
+            });
+        });
+        it('should search with only start of timerange', (done) => {
+            let condition: FindDiffsCondition = {
+                timerange: {
+                    start: start
+                }
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name,
+                    'metadata.timestamp': {
+                        $gte: start
+                    }
+                });
+                done();
+            });
+        });
+        it('should search with only end of timerange', (done) => {
+            let condition: FindDiffsCondition = {
+                timerange: {
+                    end: end
+                }
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name,
+                    'metadata.timestamp': {
+                        $lte: end
+                    }
+                });
+                done();
+            });
+        });
+        it('should create correct search object for creator', (done) => {
+            let condition: FindDiffsCondition = {
+                creator: creator
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name,
+                    'metadata.creator.user': creator.user,
+                    'metadata.creator.source': creator.source
+                });
+                done();
+            });
+        });
+        it('should search without creator', (done) => {
+            let condition: FindDiffsCondition = {
+                creator: undefined
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name
+                });
+                let condition: FindDiffsCondition = {
+                    creator: null
+                };
+                mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                    expect(diffFindByCond.calledTwice).to.be.ok();
+                    expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                        'metadata.entity': entity.name
+                    });
+                    done();
+                });
+            });
+        });
+        it('should call diff mongoose repo\'s find method with correct combined conditions', (done) => {
+            let condition: FindDiffsCondition = {
+                    objIds: [ 'a', 'b' ],
+                    timerange: {
+                        start: start,
+                        end: end
+                    },
+                    creator: creator
+                };
+            mongooseStorage.findDiffsByCondition(condition, entity, () => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(diffFindByCond.getCall(0).args[0]).to.eql({
+                    'metadata.entity': entity.name,
+                    'metadata.objId': { $in: condition.objIds },
+                    'metadata.timestamp': {
+                        $gte: start,
+                        $lte: end
+                    },
+                    'metadata.creator.user': creator.user,
+                    'metadata.creator.source': creator.source
+                });
+                done();
+            });
+        });
+        it('should yield error if not successful', (done) => {
+            let condition: FindDiffsCondition = {
+                objIds: [ 'badSearch' ],
+                timerange: {
+                    start: start,
+                    end: end
+                },
+                creator: creator
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, (err, diffs) => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(err).to.be.ok();
+                expect(err).to.eql(new Error('diff repo find error'));
+                expect(diffs).not.to.be.ok();
+                done();
+            });
+        });
+        it('should yield array of diffs on success', (done) => {
+            let condition: FindDiffsCondition = {
+                objIds: [ 'goodSearch' ],
+                timerange: {
+                    start: start,
+                    end: end
+                },
+                creator: creator
+            };
+            mongooseStorage.findDiffsByCondition(condition, entity, (err, diffs) => {
+                expect(diffFindByCond.calledOnce).to.be.ok();
+                expect(err).not.to.be.ok();
+                expect(diffs).to.be.ok();
+                let expectedDiffs: Diff[] = [];
+                for (var diff of new ResultList([DiffDoc, DiffDoc], 2).items) {
+                    expectedDiffs.push(new Diff(
+                        <IDeepDiff[]> diff.obj,
+                        diff.metadata.objId,
+                        entity,
+                        new Creator(diff.metadata.creator.user, diff.metadata.creator.source),
+                        new Date(diff.metadata.timestamp),
+                        diff._id.toHexString(),
+                        diff.metadata.linkId
+                    ));
+                }
+                expect(diffs).to.eql(expectedDiffs);
+                done();
+            });
         });
     });
     describe('insertSnapshot method', () => {

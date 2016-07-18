@@ -25,7 +25,8 @@ export class EntryModel implements IModel<EntryDocument> {
         },
         timestamp: string,
         objId: string,
-        entity: string
+        entity: string,
+        linkId?: string
     };
     obj: Object | IDeepDiff[];
 

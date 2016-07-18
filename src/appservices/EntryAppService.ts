@@ -14,7 +14,10 @@ import { Entity } from '../utils/Entity';
 import { Snapshot } from '../utils/Snapshot';
 import { Diff } from '../utils/Diff';
 import { Creator } from '../utils/Creator';
-import { StorageStrategy } from '../storage/StorageStrategy';
+import {
+    StorageStrategy,
+    FindDiffsCondition
+} from '../storage/StorageStrategy';
 import { IDeepDiff } from '../utils/IDeepDiff';
 import { DeepDiff } from '../utils/DeepDiff';
 
@@ -25,6 +28,17 @@ export class EntryAppService {
     constructor(entity: Entity, storage: StorageStrategy) {
         this.entity = entity;
         this.storage = storage;
+    }
+
+    getDiffs(condition: FindDiffsCondition, callback: (err: Error, diffs?: Diff[]) => void) {
+        if (!condition) {
+            condition = {};
+        }
+        this.storage.findDiffsByCondition(condition, this.entity, callback);
+    }
+
+    getSnapshotById(id: string, callback: (err: Error, snapshot?: Snapshot) => void) {
+        this.storage.findSnapshotById(id, this.entity, callback);
     }
 
     saveSnapshotAndDiff(obj: Object, creator: Creator, timestamp: Date,
