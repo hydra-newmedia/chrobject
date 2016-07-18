@@ -15,6 +15,8 @@ import { EntryAppService } from '../../../lib/appservices/EntryAppService';
 import { Entity, Snapshot, Diff } from '../../../lib';
 import { StorageStrategy } from '../mocks/StorageStrategy';
 import { DeepDiff } from '../../../lib/utils/DeepDiff';
+import { FindDiffsCondition } from '../../../lib/storage/StorageStrategy';
+import { Creator } from '../../../lib/utils/Creator';
 
 let expect = require('expect.js');
 
@@ -32,6 +34,47 @@ describe('The EntryAppService\'s', () => {
             expect(eas.entity).to.eql(entity);
             expect(eas.storage).to.be.ok();
             expect(eas.storage).to.eql(storage);
+        });
+    });
+
+    describe('getDiffs method', () => {
+        let findDiffsByCondition: sinon.SinonSpy;
+
+        before('mock storage', () => {
+            findDiffsByCondition = sinon.spy(eas.storage, 'findDiffsByCondition');
+        });
+        beforeEach('reset storage mock', () => {
+            findDiffsByCondition.reset();
+        });
+        after('restore storage mock', () => {
+            findDiffsByCondition.restore();
+        });
+
+        it('should search with empty condition if none was given', (done) => {
+            eas.getDiffs(null, () => {
+                expect(findDiffsByCondition.calledOnce).to.be.ok();
+                expect(findDiffsByCondition.getCall(0).args[0]).to.eql({});
+                expect(findDiffsByCondition.getCall(0).args[1]).to.eql(entity);
+                done();
+            });
+        });
+
+        it('should call findDiffsByCondition method of repo with correct condition', (done) => {
+            let creator: Creator = new Creator('username', 'sourceapp'),
+                condition: FindDiffsCondition = {
+                objIds: ['a', 'b'],
+                timerange: {
+                    start: new Date('2013-03-04T13:12:34.000Z'),
+                    end: new Date('2044-02-03T12:33:44.002Z')
+                },
+                creator: creator
+            };
+            eas.getDiffs(condition, () => {
+                expect(findDiffsByCondition.calledOnce).to.be.ok();
+                expect(findDiffsByCondition.getCall(0).args[0]).to.be(condition);
+                expect(findDiffsByCondition.getCall(0).args[1]).to.eql(entity);
+                done();
+            });
         });
     });
 
