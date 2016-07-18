@@ -15,6 +15,8 @@ import { EntryAppService } from '../../../lib/appservices/EntryAppService';
 import { Entity, Snapshot, Diff } from '../../../lib';
 import { StorageStrategy } from '../mocks/StorageStrategy';
 import { DeepDiff } from '../../../lib/utils/DeepDiff';
+import { FindDiffsCondition } from '../../../lib/storage/StorageStrategy';
+import { Creator } from '../../../lib/utils/Creator';
 
 let expect = require('expect.js');
 
@@ -32,6 +34,69 @@ describe('The EntryAppService\'s', () => {
             expect(eas.entity).to.eql(entity);
             expect(eas.storage).to.be.ok();
             expect(eas.storage).to.eql(storage);
+        });
+    });
+
+    describe('getDiffs method', () => {
+        let findDiffsByCondition: sinon.SinonSpy;
+
+        before('mock storage', () => {
+            findDiffsByCondition = sinon.spy(eas.storage, 'findDiffsByCondition');
+        });
+        beforeEach('reset storage mock', () => {
+            findDiffsByCondition.reset();
+        });
+        after('restore storage mock', () => {
+            findDiffsByCondition.restore();
+        });
+
+        it('should search with empty condition if none was given', (done) => {
+            eas.getDiffs(null, () => {
+                expect(findDiffsByCondition.calledOnce).to.be.ok();
+                expect(findDiffsByCondition.getCall(0).args[0]).to.eql({});
+                expect(findDiffsByCondition.getCall(0).args[1]).to.eql(entity);
+                done();
+            });
+        });
+
+        it('should call findDiffsByCondition method of repo with correct condition', (done) => {
+            let creator: Creator = new Creator('username', 'sourceapp'),
+                condition: FindDiffsCondition = {
+                objIds: ['a', 'b'],
+                timerange: {
+                    start: new Date('2013-03-04T13:12:34.000Z'),
+                    end: new Date('2044-02-03T12:33:44.002Z')
+                },
+                creator: creator
+            };
+            eas.getDiffs(condition, () => {
+                expect(findDiffsByCondition.calledOnce).to.be.ok();
+                expect(findDiffsByCondition.getCall(0).args[0]).to.be(condition);
+                expect(findDiffsByCondition.getCall(0).args[1]).to.eql(entity);
+                done();
+            });
+        });
+    });
+
+    describe('getSnapshotById method', () => {
+        let findSnapshotById: sinon.SinonSpy;
+
+        before('mock storage', () => {
+            findSnapshotById = sinon.spy(eas.storage, 'findSnapshotById');
+        });
+        beforeEach('reset storage mock', () => {
+            findSnapshotById.reset();
+        });
+        after('restore storage mock', () => {
+            findSnapshotById.restore();
+        });
+
+        it('should call findById method of repo with correct id', (done) => {
+            eas.getSnapshotById('myVerySpecialId', () => {
+                expect(findSnapshotById.calledOnce).to.be.ok();
+                expect(findSnapshotById.getCall(0).args[0]).to.be('myVerySpecialId');
+                done();
+            });
         });
     });
 
@@ -513,6 +578,12 @@ describe('The EntryAppService\'s', () => {
             let result = eas.deepDiff({ a: { arr: ['a', 'b', 'c', 'd', 'e'] } }, { a: { arr: ['a', 'c', 'f', 'e', 'x'] } });
             expect(result).to.eql([
                 new DeepDiff('array', 'a.arr', ['a', 'b', 'c', 'd', 'e'], ['a', 'c', 'f', 'e', 'x'])
+            ]);
+        });
+        it('should notice array order changes', () => {
+            let result = eas.deepDiff({ a: { arr: ['a', 'b', 'c', 'd', 'e'] } }, { a: { arr: ['b', 'a', 'c', 'd', 'e'] } });
+            expect(result).to.eql([
+                new DeepDiff('array', 'a.arr', ['a', 'b', 'c', 'd', 'e'], ['b', 'a', 'c', 'd', 'e'])
             ]);
         });
         it('should detect all in combination', () => {

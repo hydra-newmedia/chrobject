@@ -10,9 +10,10 @@
  *  Imports
  */
 import * as mongoose from 'mongoose';
-import { Repository } from 'mongoose-repo';
+import * as _ from 'lodash';
+import { Repository, IResultList } from 'mongoose-repo';
 import { LoggerConfig } from 'be-utils';
-import { StorageStrategy } from '../StorageStrategy';
+import { StorageStrategy, FindDiffsCondition } from '../StorageStrategy';
 import { Snapshot } from '../../utils/Snapshot';
 import { IDeepDiff } from '../../utils/IDeepDiff';
 import { Diff } from '../../utils/Diff';
@@ -37,6 +38,71 @@ export class MongooseStorage implements StorageStrategy {
         }
         this.snapshotRepository = new Repository<SnapshotDocument>(SnapshotCollection, loggerOrCfg);
         this.diffRepository = new Repository<DiffDocument>(DiffCollection, loggerOrCfg);
+    }
+
+    findDiffsByCondition(condition: FindDiffsCondition, entity: Entity, callback: (err: Error, diffs?: Diff[]) => void) {
+        let query: Object = {
+            'metadata.entity': entity.name
+        };
+        if (condition.objIds && !_.isEmpty(condition.objIds)) {
+            query['metadata.objId'] = { $in: condition.objIds };
+        }
+        if (condition.timerange) {
+            let dateCompareQuery: Object = {};
+            if (condition.timerange.start) {
+                dateCompareQuery['$gte'] = condition.timerange.start;
+            }
+            if (condition.timerange.end) {
+                dateCompareQuery['$lte'] = condition.timerange.end;
+            }
+            if (!_.isEmpty(dateCompareQuery)) {
+                query['metadata.timestamp'] = dateCompareQuery;
+            }
+        }
+        if (condition.creator) {
+            if (condition.creator.user) {
+                query['metadata.creator.user'] = condition.creator.user;
+            }
+            if (condition.creator.source) {
+                query['metadata.creator.source'] = condition.creator.source;
+            }
+        }
+        this.diffRepository.find(query, (err: any, result: IResultList<DiffDocument>) => {
+            if (err) {
+                callback(err);
+            } else {
+                let diffs: Diff[] = [];
+                for (var diff of result.items) {
+                    diffs.push(new Diff(
+                        <IDeepDiff[]> diff.obj,
+                        diff.metadata.objId,
+                        entity,
+                        new Creator(diff.metadata.creator.user, diff.metadata.creator.source),
+                        new Date(diff.metadata.timestamp),
+                        diff._id.toHexString(),
+                        diff.metadata.linkId
+                    ));
+                }
+                callback(null, diffs);
+            }
+        });
+    }
+
+    findSnapshotById(id: string, entity: Entity, callback: (err: Error, snapshot?: Snapshot) => void) {
+        this.snapshotRepository.findById(id, (err: any, model?: SnapshotDocument) => {
+            if (err) {
+                callback(err);
+            } else {
+                let snap: Snapshot = new Snapshot(
+                    model.obj,
+                    entity,
+                    new Creator(model.metadata.creator.user, model.metadata.creator.source),
+                    new Date(model.metadata.timestamp),
+                    model._id.toHexString()
+                );
+                callback(null, snap.setObjId(model.metadata.objId));
+            }
+        });
     }
 
     insertSnapshot(snapshot: Snapshot, callback: (err: Error, snapshot?: Snapshot) => void) {
