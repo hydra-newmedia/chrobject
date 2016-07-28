@@ -19,6 +19,7 @@ import {
     StorageStrategy,
     FindDiffsCondition
 } from '../storage/StorageStrategy';
+import { ChrobjectOptions } from '../utils/ChrobjectOptions';
 
 export class Chrobject {
 
@@ -26,10 +27,10 @@ export class Chrobject {
     config: Configuration;
     appService: EntryAppService;
 
-    constructor(entity: Entity, config: Configuration, storage: StorageStrategy) {
+    constructor(entity: Entity, config: Configuration, storage: StorageStrategy, options?: ChrobjectOptions) {
         this.entity = entity;
         this.config = config;
-        this.appService = new EntryAppService(entity, storage);
+        this.appService = new EntryAppService(entity, storage, options ? options : {});
     }
 
     getDiffs(condition: FindDiffsCondition, callback: (err: Error, diffs?: Diff[]) => void) {
