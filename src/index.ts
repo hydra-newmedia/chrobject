@@ -15,6 +15,7 @@ export * from './utils/IDeepDiff';
 export * from './utils/Entity';
 export * from './utils/Entry';
 export * from './utils/Snapshot';
+export * from './utils/ChrobjectOptions';
 
 export * from './storage/StorageStrategy';
 export * from './storage/mongoose/MongooseStorage';

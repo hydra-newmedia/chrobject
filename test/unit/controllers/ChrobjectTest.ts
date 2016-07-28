@@ -17,7 +17,8 @@ import {
     Configuration,
     Snapshot,
     Diff,
-    Creator
+    Creator,
+    ChrobjectOptions
 } from '../../../lib';
 import { EntryAppService } from '../../../lib/appservices/EntryAppService';
 import * as sinon from 'sinon';
@@ -34,10 +35,15 @@ describe('The Chrobject\'s', () => {
     let config: Configuration;
     let entity = new Entity('testObj', 'my.identificator');
     let storage: LibStorageStrategy = new StorageStrategy();
+    let options: ChrobjectOptions = {
+        ignoreProperties: [
+            'data.ignored'
+        ]
+    };
 
     before('setup Chrobject instance', () => {
         config = Configuration.SNAP_AND_DIFF;
-        chrobject = new Chrobject(entity, config, storage);
+        chrobject = new Chrobject(entity, config, storage, options);
     });
 
     describe('constructor', () => {
@@ -47,7 +53,7 @@ describe('The Chrobject\'s', () => {
             expect(chrobject.entity).to.eql(entity);
             expect(chrobject.config).to.eql(config);
             expect(chrobject.appService).to.be.ok();
-            expect(chrobject.appService).to.eql(new EntryAppService(entity, storage));
+            expect(chrobject.appService).to.eql(new EntryAppService(entity, storage, options));
         });
     });
 

@@ -20,14 +20,17 @@ import {
 } from '../storage/StorageStrategy';
 import { IDeepDiff } from '../utils/IDeepDiff';
 import { DeepDiff } from '../utils/DeepDiff';
+import { EntryAppServiceOptions } from '../utils/EntryAppServiceOptions';
 
 export class EntryAppService {
     entity: Entity;
     storage: StorageStrategy;
+    options: EntryAppServiceOptions;
 
-    constructor(entity: Entity, storage: StorageStrategy) {
+    constructor(entity: Entity, storage: StorageStrategy, options?: EntryAppServiceOptions) {
         this.entity = entity;
         this.storage = storage;
+        this.options = options ? options : { ignoreProperties: [] };
     }
 
     getDiffs(condition: FindDiffsCondition, callback: (err: Error, diffs?: Diff[]) => void) {
@@ -150,28 +153,30 @@ export class EntryAppService {
         let result: IDeepDiff[] = [];
         for (var key of _.keys(one)) {
             let concatPath: string = path ? path + '.' + key : key;
-            if (_.isPlainObject(one[key])) {
-                if (!_.has(two, key)) {
+            if (!_.includes(this.options.ignoreProperties, concatPath)) {
+                if (_.isPlainObject(one[key])) {
+                    if (!_.has(two, key)) {
+                        result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                    } else {
+                        result = _.concat(result, this.deepDiff(one[key], two[key], path ? path + '.' + key : key));
+                    }
+                } else if (_.isBoolean(one[key]) || _.isDate(one[key]) || _.isNumber(one[key])
+                    || _.isNull(one[key]) || _.isRegExp(one[key]) || _.isString(one[key])) {
+                    if (!_.has(two, key)) {
+                        result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                    } else if (_.get(one, key) !== _.get(two, key)) {
+                        result.push(new DeepDiff('edited', concatPath, one[key], two[key]));
+                    }
+                } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
+                    result.push(new DeepDiff('array', concatPath, one[key], two[key]));
+                } else if (!_.has(two, key)) {
                     result.push(new DeepDiff('deleted', concatPath, one[key], null));
-                } else {
-                    result = _.concat(result, this.deepDiff(one[key], two[key], path ? path + '.' + key : key));
                 }
-            } else if (_.isBoolean(one[key]) || _.isDate(one[key]) || _.isNumber(one[key])
-                || _.isNull(one[key]) || _.isRegExp(one[key]) || _.isString(one[key])) {
-                if (!_.has(two, key)) {
-                    result.push(new DeepDiff('deleted', concatPath, one[key], null));
-                } else if (_.get(one, key) !== _.get(two, key)) {
-                    result.push(new DeepDiff('edited', concatPath, one[key], two[key]));
-                }
-            } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
-                result.push(new DeepDiff('array', concatPath, one[key], two[key]));
-            } else if (!_.has(two, key)) {
-                result.push(new DeepDiff('deleted', concatPath, one[key], null));
             }
         }
         for (var key of _.keys(two)) {
             let concatPath: string = path ? path + '.' + key : key;
-            if (!_.has(one, key)) {
+            if (!_.includes(this.options.ignoreProperties, concatPath) && !_.has(one, key)) {
                 if (_.isPlainObject(two[key]) || _.isBoolean(two[key]) || _.isDate(two[key]) || _.isNumber(two[key])
                     || _.isNull(two[key]) || _.isRegExp(two[key]) || _.isString(two[key]) || _.isArray(two[key])) {
                     result.push(new DeepDiff('created', concatPath, null, two[key]));

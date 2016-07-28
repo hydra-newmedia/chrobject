@@ -12,7 +12,7 @@
 import * as sinon from 'sinon';
 import * as _ from 'lodash';
 import { EntryAppService } from '../../../lib/appservices/EntryAppService';
-import { Entity, Snapshot, Diff } from '../../../lib';
+import { Entity, Snapshot, Diff, ChrobjectOptions } from '../../../lib';
 import { StorageStrategy } from '../mocks/StorageStrategy';
 import { DeepDiff } from '../../../lib/utils/DeepDiff';
 import { FindDiffsCondition } from '../../../lib/storage/StorageStrategy';
@@ -25,15 +25,28 @@ describe('The EntryAppService\'s', () => {
     let eas: EntryAppService;
     let entity: Entity = new Entity('testObj', 'my.identificator');
     let storage: StorageStrategy = new StorageStrategy();
+    let options: ChrobjectOptions = {
+        ignoreProperties: [
+            'data.ignored'
+        ]
+    };
 
     describe('constructor', () => {
         it('should set entity and storage members', () => {
-            eas = new EntryAppService(entity, storage);
+            eas = new EntryAppService(entity, storage, options);
             expect(eas instanceof EntryAppService).to.be.ok();
             expect(eas.entity).to.be.ok();
             expect(eas.entity).to.eql(entity);
             expect(eas.storage).to.be.ok();
             expect(eas.storage).to.eql(storage);
+            expect(eas.options).to.be.ok();
+            expect(eas.options).to.eql(options);
+        });
+        it('should fallback to default options if non specified', () => {
+            eas = new EntryAppService(entity, storage);
+            expect(eas instanceof EntryAppService).to.be.ok();
+            expect(eas.options).to.be.ok();
+            expect(eas.options).to.eql({ ignoreProperties: [] });
         });
     });
 
@@ -62,13 +75,13 @@ describe('The EntryAppService\'s', () => {
         it('should call findDiffsByCondition method of repo with correct condition', (done) => {
             let creator: Creator = new Creator('username', 'sourceapp'),
                 condition: FindDiffsCondition = {
-                objIds: ['a', 'b'],
-                timerange: {
-                    start: new Date('2013-03-04T13:12:34.000Z'),
-                    end: new Date('2044-02-03T12:33:44.002Z')
-                },
-                creator: creator
-            };
+                    objIds: ['a', 'b'],
+                    timerange: {
+                        start: new Date('2013-03-04T13:12:34.000Z'),
+                        end: new Date('2044-02-03T12:33:44.002Z')
+                    },
+                    creator: creator
+                };
             eas.getDiffs(condition, () => {
                 expect(findDiffsByCondition.calledOnce).to.be.ok();
                 expect(findDiffsByCondition.getCall(0).args[0]).to.be(condition);
@@ -589,6 +602,19 @@ describe('The EntryAppService\'s', () => {
         it('should detect all in combination', () => {
             let result = eas.deepDiff(storage.testSnapObj, storage.testSnapObj2);
             expect(result).to.eql(storage.testDiffObj);
+        });
+        it('should ignore ignoreProperties', () => {
+            // set options (ignore Properties)
+            eas.options = options;
+            _.set(storage.testSnapObj, 'data.ignored', 'aVal');
+            _.set(storage.testSnapObj2, 'data.ignored', 'aDifferentVal');
+            // actual testing
+            let result = eas.deepDiff(storage.testSnapObj, storage.testSnapObj2);
+            expect(result).to.eql(storage.testDiffObj);
+            // reset options to emtpy object
+            eas.options = {};
+            _.unset(storage.testSnapObj, 'data.ignored');
+            _.unset(storage.testSnapObj2, 'data.ignored');
         });
     });
 });
