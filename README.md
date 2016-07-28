@@ -46,10 +46,15 @@ var mongooseStorage = new chrobject.MongooseStorage(loggerConfig);
 var entity = new chrobject.Entity('testObj', 'a.id');
 var config = chrobject.Configuration.SNAP_AND_DIFF;
 var creator = new chrobject.Creator('username', 'sourceapp');
+var options = {
+    ignoreProperties: [
+        'data.ignoredProp'
+    ]
+};
 var history = new chrobject.Chrobject(entity, config, mongooseStorage);
 
 // save a snapshot + diff entry
-history.saveEntry({ a: { id: 'adsf' }, data: { test: 'val' } }, creator, new Date(), function (err, result) {
+history.saveEntry({ a: { id: 'adsf' }, data: { test: 'val', ignoredProp: 'asdf' } }, creator, new Date(), function (err, result) {
     console.log('error:', err);
     console.log('result:', result);
     mongoose.disconnect();
@@ -71,6 +76,11 @@ You can configure the Chrobject in three ways by using the Configuration enum:
 * **SNAP_ONLY**: Only snapshots of the objects will be saved with a timestamp so you can get the status of the object at any time in the past.
 * **DIFF_ONLY**: Only diffs of the object compared to the last status before will be saved, so you can see who changed what and when did he do so.
 * **SNAP_AND_DIFF**: In this case both snapshots and diffs are stored, so you can see which changes were made at what time and what was the status of the object after that change. Each diff is therefore connected to a snapshot by a link id.
+
+### [ChrobjectOptions](https://github.com/hydra-newmedia/chrobject/blob/develop/src/utils/ChrobjectOptions.ts)
+
+You can set some options to Chrobject:
+* **ignoreProperties**: String array of properties to be ignored when _diff_-ing Objects, eg. `[ 'my.path.to.prop1', 'my.other.path' ]`.
 
 ### Storage Strategy
 
