@@ -87,6 +87,11 @@ describe('The DeepDiff\'s', () => {
             expect(deepDiff.newValue).to.be.ok();
             expect(deepDiff.newValue).to.be('bbb');
         });
+        it('should NOT ignore 0 values (due to them not being truthy)', () => {
+            let deepDiff: DeepDiff = new DeepDiff('edited', 'a.b', 0, 0);
+            expect(deepDiff.oldValue).to.be(0);
+            expect(deepDiff.newValue).to.be(0);
+        });
         it('should set deleted if action=\'deleted\'', () => {
             let deepDiff: DeepDiff = new DeepDiff('deleted', 'a.b', 'aaa', 'bbb');
             expect(deepDiff.action).to.be.ok();
