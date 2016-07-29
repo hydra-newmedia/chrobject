@@ -10,6 +10,7 @@
  *  Imports
  */
 import * as _ from 'lodash';
+import * as hash from 'object-hash';
 import { Entity } from '../utils/Entity';
 import { Snapshot } from '../utils/Snapshot';
 import { Diff } from '../utils/Diff';
@@ -164,7 +165,7 @@ export class EntryAppService {
                     || _.isNull(one[key]) || _.isRegExp(one[key]) || _.isString(one[key])) {
                     if (!_.has(two, key)) {
                         result.push(new DeepDiff('deleted', concatPath, one[key], null));
-                    } else if (_.get(one, key) !== _.get(two, key)) {
+                    } else if (hash(one[key]) !== hash(two[key])) {
                         result.push(new DeepDiff('edited', concatPath, one[key], two[key]));
                     }
                 } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
