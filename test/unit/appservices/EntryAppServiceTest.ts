@@ -563,6 +563,24 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('edited', 'a.c', 1, 'ad')
             ]);
         });
+        it('should detect edited object properties', () => {
+            let result = eas.deepDiff({
+                a: {
+                    b: new Date('2015-01-02T12:23:34.456Z')
+                }
+            }, { a: { b: new Date('2016-02-03T23:34:45.567Z') } });
+            expect(result).to.eql([
+                new DeepDiff('edited', 'a.b', new Date('2015-01-02T12:23:34.456Z'), new Date('2016-02-03T23:34:45.567Z'))
+            ]);
+        });
+        it('should not detect object properties that have not been altered but are different objects', () => {
+            let result = eas.deepDiff({
+                a: {
+                    b: new Date('2015-01-02T12:23:34.456Z')
+                }
+            }, { a: { b: new Date('2015-01-02T12:23:34.456Z') } });
+            expect(result).to.eql([]);
+        });
         it('should detect deleted properties', () => {
             let result = eas.deepDiff({
                 a: {
