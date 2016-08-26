@@ -532,10 +532,12 @@ describe('The EntryAppService\'s', () => {
                 a: {
                     b: 'asdf',
                     c: 'ad'
-                }
+                },
+                d: false
             });
             expect(result).to.eql([
-                new DeepDiff('created', 'a.c', null, 'ad')
+                new DeepDiff('created', 'a.c', null, 'ad'),
+                new DeepDiff('created', 'd', null, false)
             ]);
         });
         it('should detect added object properties (get the path to to added child not added object)', () => {
