@@ -538,16 +538,17 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('created', 'a.c', null, 'ad')
             ]);
         });
-        it('should detect added object properties', () => {
+        it('should detect added object properties (get the path to to added child not added object)', () => {
             let result = eas.deepDiff({ a: { b: 'asdf' } }, {
                 a: {
                     b: 'asdf',
-                    c: { d: 'ad' },
+                    c: { d: 'ad', e: true  },
                     arr: 'asdfa'.split('')
                 }
             });
             expect(result).to.eql([
-                new DeepDiff('created', 'a.c', null, { d: 'ad' }),
+                new DeepDiff('created', 'a.c.d', null, 'ad'),
+                new DeepDiff('created', 'a.c.e', null, true),
                 new DeepDiff('created', 'a.arr', null, 'asdfa'.split(''))
             ]);
         });

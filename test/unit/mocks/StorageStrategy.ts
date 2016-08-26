@@ -45,11 +45,11 @@ export class StorageStrategy implements chrobject.StorageStrategy {
     testDiffObj: IDeepDiff[] = [
         new DeepDiff('edited', 'data.a', 'aValue', 'aEditedValue'),
         new DeepDiff('deleted', 'data.no', 'nope', null),
-        new DeepDiff('created', 'data.b', null, 'createdValue'),
         new DeepDiff('array', 'arr', ['a', 'few', 'elements'], ['a', 'few', 'more', 'elements', { than: 'before' }]),
         new DeepDiff('array', 'delArr', ['a', 'b', 'c'], ['a', 'c']),
         new DeepDiff('array', 'flipchartArr', ['a', 'b', 'c', 'd', 'e'], ['a', 'c', 'f', 'e', 'x']),
-        new DeepDiff('created', 'addedKey', null, { added: 'lö' })
+        new DeepDiff('created', 'addedKey.added', null, 'lö'),
+        new DeepDiff('created', 'data.b', null, 'createdValue')
     ];
     creator: chrobject.Creator = new chrobject.Creator('username', 'sourceapp');
     foundSnapshot: chrobject.Snapshot = new chrobject.Snapshot(
