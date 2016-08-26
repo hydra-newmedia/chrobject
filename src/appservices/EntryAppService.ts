@@ -155,9 +155,21 @@ export class EntryAppService {
         for (var key of _.keys(one)) {
             let concatPath: string = path ? path + '.' + key : key;
             if (!_.includes(this.options.ignoreProperties, concatPath)) {
+
+                let getDeletedProperties = (obj: any, propPath: string = null) => {
+                    if (_.isPlainObject(obj)) {
+                        for (var objKey of _.keys(obj)) {
+                            getDeletedProperties(obj[objKey], propPath ? propPath + '.' + objKey : objKey);
+                        }
+                    } else if (_.isBoolean(obj) || _.isDate(obj) || _.isNumber(obj)
+                        || _.isNull(obj) || _.isRegExp(obj) || _.isString(obj) || _.isArray(obj)) {
+                        result.push(new DeepDiff('deleted', propPath, obj, null));
+                    }
+                };
+
                 if (_.isPlainObject(one[key])) {
                     if (!_.has(two, key)) {
-                        result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                        getDeletedProperties(one[key], concatPath);
                     } else {
                         result = _.concat(result, this.deepDiff(one[key], two[key], path ? path + '.' + key : key));
                     }
@@ -171,7 +183,7 @@ export class EntryAppService {
                 } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
                     result.push(new DeepDiff('array', concatPath, one[key], two[key]));
                 } else if (!_.has(two, key)) {
-                    result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                    getDeletedProperties(one[key], concatPath);
                 }
             }
         }
