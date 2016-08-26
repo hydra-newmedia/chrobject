@@ -175,15 +175,26 @@ export class EntryAppService {
                 }
             }
         }
-        for (var key of _.keys(two)) {
-            let concatPath: string = path ? path + '.' + key : key;
-            if (!_.includes(this.options.ignoreProperties, concatPath) && !_.has(one, key)) {
-                if (_.isPlainObject(two[key]) || _.isBoolean(two[key]) || _.isDate(two[key]) || _.isNumber(two[key])
-                    || _.isNull(two[key]) || _.isRegExp(two[key]) || _.isString(two[key]) || _.isArray(two[key])) {
-                    result.push(new DeepDiff('created', concatPath, null, two[key]));
+
+        let getCreatedProperties = (obj: Object, path: string = null) => {
+            for (var key of _.keys(path ? _.get(obj, path) : obj)) {
+                let concatPath: string = path ? path + '.' + key : key;
+                let val: any = _.get(two, concatPath);
+                if (!_.includes(this.options.ignoreProperties, concatPath)) {
+                    if (_.isBoolean(val) || _.isDate(val) || _.isNumber(val)
+                        || _.isNull(val) || _.isRegExp(val) || _.isString(val) || _.isArray(val)) {
+                        if (!_.has(one, concatPath)) {
+                            result.push(new DeepDiff('created', concatPath, null, val));
+                        }
+                    } else if (_.isPlainObject(val)) {
+                        getCreatedProperties(obj, concatPath);
+                    }
                 }
             }
-        }
+        };
+
+        getCreatedProperties(two, path);
+
         return result;
     }
 }
