@@ -597,15 +597,20 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('deleted', 'a.arr', 'asdf'.split(''), null)
             ]);
         });
-        it('should detect deleted object properties', () => {
+        it('should detect deleted object properties in depth', () => {
             let result = eas.deepDiff({
                 a: {
                     b: 'asdf',
-                    c: { d: 'ad' }
-                }
+                    c: { d: 'ad', e: false }
+                },
+                obj: { a: 'test', b: { c: true, e: false } }
             }, { a: { b: 'asdf' } });
             expect(result).to.eql([
-                new DeepDiff('deleted', 'a.c', { d: 'ad' }, null)
+                new DeepDiff('deleted', 'a.c.d', 'ad', null),
+                new DeepDiff('deleted', 'a.c.e', false, null),
+                new DeepDiff('deleted', 'obj.a', 'test', null),
+                new DeepDiff('deleted', 'obj.b.c', true, null),
+                new DeepDiff('deleted', 'obj.b.e', false, null)
             ]);
         });
         it('should notice array property changes', () => {
