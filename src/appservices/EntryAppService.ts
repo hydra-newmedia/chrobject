@@ -155,9 +155,21 @@ export class EntryAppService {
         for (var key of _.keys(one)) {
             let concatPath: string = path ? path + '.' + key : key;
             if (!_.includes(this.options.ignoreProperties, concatPath)) {
+
+                let getDeletedProperties = (obj: any, propPath: string = null) => {
+                    if (_.isPlainObject(obj)) {
+                        for (var objKey of _.keys(obj)) {
+                            getDeletedProperties(obj[objKey], propPath ? propPath + '.' + objKey : objKey);
+                        }
+                    } else if (_.isBoolean(obj) || _.isDate(obj) || _.isNumber(obj)
+                        || _.isNull(obj) || _.isRegExp(obj) || _.isString(obj) || _.isArray(obj)) {
+                        result.push(new DeepDiff('deleted', propPath, obj, null));
+                    }
+                };
+
                 if (_.isPlainObject(one[key])) {
                     if (!_.has(two, key)) {
-                        result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                        getDeletedProperties(one[key], concatPath);
                     } else {
                         result = _.concat(result, this.deepDiff(one[key], two[key], path ? path + '.' + key : key));
                     }
@@ -171,19 +183,30 @@ export class EntryAppService {
                 } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
                     result.push(new DeepDiff('array', concatPath, one[key], two[key]));
                 } else if (!_.has(two, key)) {
-                    result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                    getDeletedProperties(one[key], concatPath);
                 }
             }
         }
-        for (var key of _.keys(two)) {
-            let concatPath: string = path ? path + '.' + key : key;
-            if (!_.includes(this.options.ignoreProperties, concatPath) && !_.has(one, key)) {
-                if (_.isPlainObject(two[key]) || _.isBoolean(two[key]) || _.isDate(two[key]) || _.isNumber(two[key])
-                    || _.isNull(two[key]) || _.isRegExp(two[key]) || _.isString(two[key]) || _.isArray(two[key])) {
-                    result.push(new DeepDiff('created', concatPath, null, two[key]));
+
+        let getCreatedProperties = (obj: Object, path: string = null) => {
+            for (var key of _.keys(path ? _.get(obj, path) : obj)) {
+                let concatPath: string = path ? path + '.' + key : key;
+                let val: any = _.get(two, concatPath);
+                if (!_.includes(this.options.ignoreProperties, concatPath)) {
+                    if (_.isBoolean(val) || _.isDate(val) || _.isNumber(val)
+                        || _.isNull(val) || _.isRegExp(val) || _.isString(val) || _.isArray(val)) {
+                        if (!_.has(one, concatPath)) {
+                            result.push(new DeepDiff('created', concatPath, null, val));
+                        }
+                    } else if (_.isPlainObject(val)) {
+                        getCreatedProperties(obj, concatPath);
+                    }
                 }
             }
-        }
+        };
+
+        getCreatedProperties(two, path);
+
         return result;
     }
 }

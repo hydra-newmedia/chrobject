@@ -532,22 +532,25 @@ describe('The EntryAppService\'s', () => {
                 a: {
                     b: 'asdf',
                     c: 'ad'
-                }
+                },
+                d: false
             });
             expect(result).to.eql([
-                new DeepDiff('created', 'a.c', null, 'ad')
+                new DeepDiff('created', 'a.c', null, 'ad'),
+                new DeepDiff('created', 'd', null, false)
             ]);
         });
-        it('should detect added object properties', () => {
+        it('should detect added object properties (get the path to to added child not added object)', () => {
             let result = eas.deepDiff({ a: { b: 'asdf' } }, {
                 a: {
                     b: 'asdf',
-                    c: { d: 'ad' },
+                    c: { d: 'ad', e: true  },
                     arr: 'asdfa'.split('')
                 }
             });
             expect(result).to.eql([
-                new DeepDiff('created', 'a.c', null, { d: 'ad' }),
+                new DeepDiff('created', 'a.c.d', null, 'ad'),
+                new DeepDiff('created', 'a.c.e', null, true),
                 new DeepDiff('created', 'a.arr', null, 'asdfa'.split(''))
             ]);
         });
@@ -594,15 +597,20 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('deleted', 'a.arr', 'asdf'.split(''), null)
             ]);
         });
-        it('should detect deleted object properties', () => {
+        it('should detect deleted object properties in depth', () => {
             let result = eas.deepDiff({
                 a: {
                     b: 'asdf',
-                    c: { d: 'ad' }
-                }
+                    c: { d: 'ad', e: false }
+                },
+                obj: { a: 'test', b: { c: true, e: false } }
             }, { a: { b: 'asdf' } });
             expect(result).to.eql([
-                new DeepDiff('deleted', 'a.c', { d: 'ad' }, null)
+                new DeepDiff('deleted', 'a.c.d', 'ad', null),
+                new DeepDiff('deleted', 'a.c.e', false, null),
+                new DeepDiff('deleted', 'obj.a', 'test', null),
+                new DeepDiff('deleted', 'obj.b.c', true, null),
+                new DeepDiff('deleted', 'obj.b.e', false, null)
             ]);
         });
         it('should notice array property changes', () => {
