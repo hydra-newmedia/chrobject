@@ -31,7 +31,11 @@ export class EntryAppService {
     constructor(entity: Entity, storage: StorageStrategy, options?: EntryAppServiceOptions) {
         this.entity = entity;
         this.storage = storage;
-        this.options = options ? options : { ignoreProperties: [] };
+        this.options = { ignoreProperties: [], ignoreSubProperties: [] };
+        if (options) {
+            this.options.ignoreProperties = options.ignoreProperties || [];
+            this.options.ignoreSubProperties = options.ignoreSubProperties || [];
+        }
     }
 
     getDiffs(condition: FindDiffsCondition, callback: (err: Error, diffs?: Diff[]) => void) {
@@ -152,13 +156,26 @@ export class EntryAppService {
 
     deepDiff(one: Object, two: Object, path: string = ''): IDeepDiff[] {
         let result: IDeepDiff[] = [];
-        for (var key of _.keys(one)) {
+
+        let unsetIgnoredSubProperties = (obj: any) => {
+            if (_.isPlainObject(obj)) {
+                for (var prop of this.options.ignoreSubProperties) {
+                    _.unset(obj, prop);
+                }
+            }
+        };
+
+        _.keys(one).forEach((key) => {
             let concatPath: string = path ? path + '.' + key : key;
-            if (!_.includes(this.options.ignoreProperties, concatPath)) {
+            if (!_.includes(this.options.ignoreProperties, concatPath) && !_.includes(this.options.ignoreSubProperties, concatPath)) {
+
+                unsetIgnoredSubProperties(one[key]);
+                unsetIgnoredSubProperties(two[key]);
 
                 let getDeletedProperties = (obj: any, propPath: string = null) => {
                     if (_.isPlainObject(obj)) {
                         for (var objKey of _.keys(obj)) {
+                            unsetIgnoredSubProperties(obj[objKey]);
                             getDeletedProperties(obj[objKey], propPath ? propPath + '.' + objKey : objKey);
                         }
                     } else if (_.isBoolean(obj) || _.isDate(obj) || _.isNumber(obj)
@@ -181,17 +198,24 @@ export class EntryAppService {
                         result.push(new DeepDiff('edited', concatPath, one[key], two[key]));
                     }
                 } else if (_.isArray(one[key]) && _.isArray(two[key]) && !_.isEqual(one[key], two[key])) {
+                    for (var i = 0; i < one[key].length; i++) {
+                        unsetIgnoredSubProperties(one[key][i]);
+                    }
+                    for (var i = 0; i < two[key].length; i++) {
+                        unsetIgnoredSubProperties(two[key][i]);
+                    }
                     result.push(new DeepDiff('array', concatPath, one[key], two[key]));
                 } else if (!_.has(two, key)) {
                     getDeletedProperties(one[key], concatPath);
                 }
             }
-        }
+        });
 
         let getCreatedProperties = (obj: Object, path: string = null) => {
             for (var key of _.keys(path ? _.get(obj, path) : obj)) {
                 let concatPath: string = path ? path + '.' + key : key;
                 let val: any = _.get(two, concatPath);
+                unsetIgnoredSubProperties(val);
                 if (!_.includes(this.options.ignoreProperties, concatPath)) {
                     if (_.isBoolean(val) || _.isDate(val) || _.isNumber(val)
                         || _.isNull(val) || _.isRegExp(val) || _.isString(val) || _.isArray(val)) {
