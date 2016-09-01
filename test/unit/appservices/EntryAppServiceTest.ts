@@ -40,13 +40,18 @@ describe('The EntryAppService\'s', () => {
             expect(eas.storage).to.be.ok();
             expect(eas.storage).to.eql(storage);
             expect(eas.options).to.be.ok();
-            expect(eas.options).to.eql(options);
+            expect(eas.options).to.eql({
+                ignoreProperties: ['data.ignored'], ignoreSubProperties: []
+            });
         });
         it('should fallback to default options if non specified', () => {
             eas = new EntryAppService(entity, storage);
             expect(eas instanceof EntryAppService).to.be.ok();
             expect(eas.options).to.be.ok();
-            expect(eas.options).to.eql({ ignoreProperties: [] });
+            expect(eas.options).to.eql({
+                ignoreProperties: [],
+                ignoreSubProperties: []
+            });
         });
     });
 
@@ -544,7 +549,7 @@ describe('The EntryAppService\'s', () => {
             let result = eas.deepDiff({ a: { b: 'asdf' } }, {
                 a: {
                     b: 'asdf',
-                    c: { d: 'ad', e: true  },
+                    c: { d: 'ad', e: true },
                     arr: 'asdfa'.split('')
                 }
             });
@@ -631,7 +636,9 @@ describe('The EntryAppService\'s', () => {
         });
         it('should ignore ignoreProperties', () => {
             // set options (ignore Properties)
-            eas.options = options;
+            eas.options = {
+                ignoreProperties: ['data.ignored'], ignoreSubProperties: []
+            };
             _.set(storage.testSnapObj, 'data.ignored', 'aVal');
             _.set(storage.testSnapObj2, 'data.ignored', 'aDifferentVal');
             // actual testing
@@ -641,6 +648,64 @@ describe('The EntryAppService\'s', () => {
             eas.options = {};
             _.unset(storage.testSnapObj, 'data.ignored');
             _.unset(storage.testSnapObj2, 'data.ignored');
+        });
+        it('should ignore ignoreSubProperties', () => {
+            // set options (ignoreSubProperties)
+            eas.options = {
+                ignoreProperties: [], ignoreSubProperties: ['_id', 'id']
+            };
+            // actual testing
+            let result = eas.deepDiff({
+                a: {
+                    a: {
+                        a: 'aaaa',
+                        b: [
+                            { _id: 'bbbb', a: 'a0'},
+                            { id: 'bbbb', a: 'a1'}
+                        ],
+                        _id: {
+                            a: 'aaaa'
+                        }
+                    },
+                    b: 'aaaa',
+                    id: 'aaaa'
+                },
+                b: 'aaaa',
+                id: 'aaaa',
+                _id: {
+                    a: 'aaaa'
+                }
+            }, {
+                a: {
+                    a: {
+                        a: 'bbbb',
+                        b: [
+                            { _id: 'bbbb', a: 'a0'},
+                            { _id: 'bbbb', a: 'b1'}
+                        ],
+                        _id: {
+                            a: 'bbbb'
+                        },
+                        id: 'bbbb'
+                    },
+                    b: 'bbbb',
+                    _id: {
+                        a: 'bbbb'
+                    },
+                    id: 'bbbb'
+                },
+                b: 'bbbb',
+                id: 'bbbb',
+                _id: {
+                    a: 'bbbb'
+                }
+            });
+            expect(result).to.eql([
+                new DeepDiff('edited', 'a.a.a', 'aaaa', 'bbbb'),
+                new DeepDiff('array', 'a.a.b', [{ a: 'a0'}, {a: 'a1'}], [{ a: 'a0'}, {a: 'b1'}]),
+                new DeepDiff('edited', 'a.b', 'aaaa', 'bbbb'),
+                new DeepDiff('edited', 'b', 'aaaa', 'bbbb')
+            ]);
         });
     });
 });
