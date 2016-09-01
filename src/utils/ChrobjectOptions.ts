@@ -8,4 +8,5 @@
 
 export interface ChrobjectOptions {
     ignoreProperties?: string[];
+    ignoreSubProperties?: string[];
 }
