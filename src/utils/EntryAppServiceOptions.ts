@@ -8,4 +8,5 @@
 
 export interface EntryAppServiceOptions {
     ignoreProperties?: string[];
+    ignoreSubProperties?: string[];
 }
