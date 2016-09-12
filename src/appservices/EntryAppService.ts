@@ -204,7 +204,9 @@ export class EntryAppService {
                     for (var i = 0; i < two[key].length; i++) {
                         unsetIgnoredSubProperties(two[key][i]);
                     }
-                    result.push(new DeepDiff('array', concatPath, one[key], two[key]));
+                    if (hash(one[key]) !== hash(two[key])) {
+                        result.push(new DeepDiff('array', concatPath, one[key], two[key]));
+                    }
                 } else if (!_.has(two, key)) {
                     getDeletedProperties(one[key], concatPath);
                 }
