@@ -706,6 +706,56 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('edited', 'a.b', 'aaaa', 'bbbb'),
                 new DeepDiff('edited', 'b', 'aaaa', 'bbbb')
             ]);
+            // test only change of ignoredSubProperties
+            result = eas.deepDiff({
+                a: {
+                    a: {
+                        b: [
+                            { a: 'a0' },
+                            { a: 'a1' }
+                        ]
+                    }
+                }
+            }, {
+                a: {
+                    a: {
+                        b: [
+                            { _id: 'bbbb', a: 'a0'},
+                            { id: 'bbbb', a: 'a1'}
+                        ]
+                    }
+                }
+            });
+            expect(result).to.eql([]);
+            // again test ignoredSubProperties but with other changes, too
+            result = eas.deepDiff({
+                a: {
+                    a: {
+                        b: [
+                            { a: 'a0' },
+                            { a: 'a1' }
+                        ]
+                    }
+                },
+                o: {
+                    a: 'a'
+                }
+            }, {
+                a: {
+                    a: {
+                        b: [
+                            { _id: 'bbbb', a: 'a0'},
+                            { id: 'bbbb', a: 'a1'}
+                        ]
+                    }
+                },
+                o: {
+                    a: 'b'
+                }
+            });
+            expect(result).to.eql([
+                new DeepDiff('edited', 'o.a', 'a', 'b')
+            ]);
         });
     });
 });
