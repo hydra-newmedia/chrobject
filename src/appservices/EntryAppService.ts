@@ -194,6 +194,10 @@ export class EntryAppService {
                     || _.isNull(one[key]) || _.isRegExp(one[key]) || _.isString(one[key])) {
                     if (!_.has(two, key)) {
                         result.push(new DeepDiff('deleted', concatPath, one[key], null));
+                    } else if (_.isDate(one[key]) || _.isDate(two[key])) {
+                        if (new Date(one[key]).valueOf() !== new Date(two[key]).valueOf()) {
+                            result.push(new DeepDiff('edited', concatPath, new Date(one[key]), new Date(two[key])));
+                        }
                     } else if (hash(one[key]) !== hash(two[key])) {
                         result.push(new DeepDiff('edited', concatPath, one[key], two[key]));
                     }
