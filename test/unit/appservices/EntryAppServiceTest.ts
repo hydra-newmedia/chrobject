@@ -581,6 +581,16 @@ describe('The EntryAppService\'s', () => {
                 new DeepDiff('edited', 'a.b', new Date('2015-01-02T12:23:34.456Z'), new Date('2016-02-03T23:34:45.567Z'))
             ]);
         });
+        it('should detect edited date properties', () => {
+            let result = eas.deepDiff({
+                a: {
+                    b: new Date(123456)
+                }
+            }, { a: { b: '1970-01-01T00:02:03.457Z' } });
+            expect(result).to.eql([
+                new DeepDiff('edited', 'a.b', new Date('1970-01-01T00:02:03.456Z'), new Date('1970-01-01T00:02:03.457Z'))
+            ]);
+        });
         it('should not detect object properties that have not been altered but are different objects', () => {
             let result = eas.deepDiff({
                 a: {
@@ -634,6 +644,18 @@ describe('The EntryAppService\'s', () => {
             let result = eas.deepDiff(storage.testSnapObj, storage.testSnapObj2);
             expect(result).to.eql(storage.testDiffObj);
         });
+        it('should ignore unchanged date changes', () => {
+            let result = eas.deepDiff({
+                a: new Date(123456),
+                b: '1970-01-01T00:02:03.456Z',
+                c: new Date('1970-01-01T00:02:03.456Z')
+            }, {
+                a: '1970-01-01T00:02:03.456Z',
+                b: new Date('1970-01-01T00:02:03.456Z'),
+                c: new Date(123456)
+            });
+            expect(result).to.eql([]);
+        });
         it('should ignore ignoreProperties', () => {
             // set options (ignore Properties)
             eas.options = {
@@ -660,8 +682,8 @@ describe('The EntryAppService\'s', () => {
                     a: {
                         a: 'aaaa',
                         b: [
-                            { _id: 'bbbb', a: 'a0'},
-                            { id: 'bbbb', a: 'a1'}
+                            { _id: 'bbbb', a: 'a0' },
+                            { id: 'bbbb', a: 'a1' }
                         ],
                         _id: {
                             a: 'aaaa'
@@ -680,8 +702,8 @@ describe('The EntryAppService\'s', () => {
                     a: {
                         a: 'bbbb',
                         b: [
-                            { _id: 'bbbb', a: 'a0'},
-                            { _id: 'bbbb', a: 'b1'}
+                            { _id: 'bbbb', a: 'a0' },
+                            { _id: 'bbbb', a: 'b1' }
                         ],
                         _id: {
                             a: 'bbbb'
@@ -702,7 +724,7 @@ describe('The EntryAppService\'s', () => {
             });
             expect(result).to.eql([
                 new DeepDiff('edited', 'a.a.a', 'aaaa', 'bbbb'),
-                new DeepDiff('array', 'a.a.b', [{ a: 'a0'}, {a: 'a1'}], [{ a: 'a0'}, {a: 'b1'}]),
+                new DeepDiff('array', 'a.a.b', [{ a: 'a0' }, { a: 'a1' }], [{ a: 'a0' }, { a: 'b1' }]),
                 new DeepDiff('edited', 'a.b', 'aaaa', 'bbbb'),
                 new DeepDiff('edited', 'b', 'aaaa', 'bbbb')
             ]);
@@ -720,8 +742,8 @@ describe('The EntryAppService\'s', () => {
                 a: {
                     a: {
                         b: [
-                            { _id: 'bbbb', a: 'a0'},
-                            { id: 'bbbb', a: 'a1'}
+                            { _id: 'bbbb', a: 'a0' },
+                            { id: 'bbbb', a: 'a1' }
                         ]
                     }
                 }
@@ -744,8 +766,8 @@ describe('The EntryAppService\'s', () => {
                 a: {
                     a: {
                         b: [
-                            { _id: 'bbbb', a: 'a0'},
-                            { id: 'bbbb', a: 'a1'}
+                            { _id: 'bbbb', a: 'a0' },
+                            { id: 'bbbb', a: 'a1' }
                         ]
                     }
                 },
